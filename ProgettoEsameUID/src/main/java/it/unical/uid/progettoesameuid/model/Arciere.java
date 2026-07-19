@@ -14,4 +14,5 @@ public class Arciere extends Ally {
         // Nella Fase 3 (Game Loop) qui faremo spawnare una freccia!
         System.out.println("L'Arciere in [" + row + "][" + col + "] sta prendendo la mira...");
     }
+    
 }

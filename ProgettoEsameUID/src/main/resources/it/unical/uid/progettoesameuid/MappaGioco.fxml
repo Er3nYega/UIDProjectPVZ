@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Polygon?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unical.uid.progettoesameuid.controller.GiocoController">
+   <children>
+       <StackPane prefHeight="1080.0" prefWidth="1920.0">
+           <children>
+               <ImageView fx:id="sfondoMappa" fitHeight="1080.0" fitWidth="1920.0" pickOnBounds="true" preserveRatio="false">
+               <image>
+                  <Image url="@../../../../map.png" />
+               </image></ImageView>
+           </children>
+       </StackPane>
+      <AnchorPane fx:id="areaGiocoAnchor" prefHeight="1080.0" prefWidth="1920.0">
+         <children>
+             <Polygon id="cell_0_0" fx:id="cell_0_0" fill="TRANSPARENT" layoutX="557.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="0.0, -24.0, 93.0, -24.0, 86.0, 104.0, -14.0, 104.0" />
+             <Polygon id="cell_0_1" fx:id="cell_0_1" fill="TRANSPARENT" layoutX="654.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-4.0, -24.0, 99.0, -24.0, 99.0, 104.0, -12.0, 104.0" />
+             <Polygon id="cell_0_2" fx:id="cell_0_2" fill="TRANSPARENT" layoutX="763.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 99.0, -24.0, 99.0, 104.0, -10.0, 104.0" />
+             <Polygon id="cell_0_3" fx:id="cell_0_3" fill="TRANSPARENT" layoutX="872.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 89.0, 104.0, -10.0, 104.0" />
+             <Polygon id="cell_0_4" fx:id="cell_0_4" fill="TRANSPARENT" layoutX="971.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 96.0, -24.0, 96.0, 104.0, -10.0, 104.0" />
+             <Polygon id="cell_0_5" fx:id="cell_0_5" fill="TRANSPARENT" layoutX="1077.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 96.0, -24.0, 96.0, 104.0, -10.0, 104.0" />
+             <Polygon id="cell_0_6" fx:id="cell_0_6" fill="TRANSPARENT" layoutX="1183.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 84.0, -24.0, 96.0, 104.0, -10.0, 104.0" />
+             <Polygon id="cell_0_7" fx:id="cell_0_7" fill="TRANSPARENT" layoutX="1289.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-19.0, -24.0, 84.0, -24.0, 96.0, 104.0, -10.0, 104.0" />
+             <Polygon id="cell_0_8" fx:id="cell_0_8" fill="TRANSPARENT" layoutX="1396.0" layoutY="320.0" onMousePressed="#gestisciClickCasella" points="-19.0, -24.0, 84.0, -24.0, 96.0, 104.0, -10.0, 104.0" />
+
+             <Polygon id="cell_1_0" fx:id="cell_1_0" fill="TRANSPARENT" layoutX="543.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="0.0, -24.0, 93.0, -24.0, 86.0, 104.0, -14.0, 104.0" />
+             <Polygon id="cell_1_1" fx:id="cell_1_1" fill="TRANSPARENT" layoutX="652.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 95.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_1_2" fx:id="cell_1_2" fill="TRANSPARENT" layoutX="763.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_1_3" fx:id="cell_1_3" fill="TRANSPARENT" layoutX="872.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_1_4" fx:id="cell_1_4" fill="TRANSPARENT" layoutX="978.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_1_5" fx:id="cell_1_5" fill="TRANSPARENT" layoutX="1084.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_1_6" fx:id="cell_1_6" fill="TRANSPARENT" layoutX="1190.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-7.0, -24.0, 89.0, -24.0, 96.0, 104.0, -7.0, 104.0" />
+             <Polygon id="cell_1_7" fx:id="cell_1_7" fill="TRANSPARENT" layoutX="1296.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 96.0, 104.0, -10.0, 104.0" />
+             <Polygon id="cell_1_8" fx:id="cell_1_8" fill="TRANSPARENT" layoutX="1402.0" layoutY="448.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 96.0, 104.0, 0.0, 104.0" />
+
+             <Polygon id="cell_2_0" fx:id="cell_2_0" fill="TRANSPARENT" layoutX="536.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-7.0, -31.0, 93.0, -31.0, 86.0, 104.0, -24.0, 104.0" />
+             <Polygon id="cell_2_1" fx:id="cell_2_1" fill="TRANSPARENT" layoutX="645.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 95.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_2_2" fx:id="cell_2_2" fill="TRANSPARENT" layoutX="756.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 95.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_2_3" fx:id="cell_2_3" fill="TRANSPARENT" layoutX="865.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_2_4" fx:id="cell_2_4" fill="TRANSPARENT" layoutX="978.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-17.0, -31.0, 89.0, -31.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_2_5" fx:id="cell_2_5" fill="TRANSPARENT" layoutX="1090.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_2_6" fx:id="cell_2_6" fill="TRANSPARENT" layoutX="1202.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 84.0, -24.0, 91.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_2_7" fx:id="cell_2_7" fill="TRANSPARENT" layoutX="1303.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 96.0, 104.0, 2.0, 104.0" />
+             <Polygon id="cell_2_8" fx:id="cell_2_8" fill="TRANSPARENT" layoutX="1416.0" layoutY="583.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 96.0, 104.0, -9.0, 104.0" />
+
+             <Polygon id="cell_3_0" fx:id="cell_3_0" fill="TRANSPARENT" layoutX="525.0" layoutY="718.0" onMousePressed="#gestisciClickCasella" points="-13.0, -31.0, 93.0, -31.0, 86.0, 104.0, -24.0, 104.0" />
+             <Polygon id="cell_3_1" fx:id="cell_3_1" fill="TRANSPARENT" layoutX="634.0" layoutY="715.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 95.0, -24.0, 89.0, 104.0, -24.0, 104.0" />
+             <Polygon id="cell_3_2" fx:id="cell_3_2" fill="TRANSPARENT" layoutX="745.0" layoutY="715.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 95.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_3_3" fx:id="cell_3_3" fill="TRANSPARENT" layoutX="865.0" layoutY="715.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 89.0, 104.0, -17.0, 104.0" />
+             <Polygon id="cell_3_4" fx:id="cell_3_4" fill="TRANSPARENT" layoutX="978.0" layoutY="715.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_3_5" fx:id="cell_3_5" fill="TRANSPARENT" layoutX="1090.0" layoutY="715.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_3_6" fx:id="cell_3_6" fill="TRANSPARENT" layoutX="1202.0" layoutY="715.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 96.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_3_7" fx:id="cell_3_7" fill="TRANSPARENT" layoutX="1315.0" layoutY="715.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 96.0, 104.0, -9.0, 104.0" />
+             <Polygon id="cell_3_8" fx:id="cell_3_8" fill="TRANSPARENT" layoutX="1436.0" layoutY="718.0" onMousePressed="#gestisciClickCasella" points="-25.0, -27.0, 89.0, -24.0, 96.0, 104.0, -16.0, 104.0" />
+
+             <Polygon id="cell_4_0" fx:id="cell_4_0" fill="TRANSPARENT" layoutX="509.0" layoutY="853.0" onMousePressed="#gestisciClickCasella" points="-13.0, -31.0, 93.0, -31.0, 86.0, 104.0, -24.0, 104.0" />
+             <Polygon id="cell_4_1" fx:id="cell_4_1" fill="TRANSPARENT" layoutX="626.0" layoutY="850.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 95.0, -24.0, 89.0, 104.0, -24.0, 104.0" />
+             <Polygon id="cell_4_2" fx:id="cell_4_2" fill="TRANSPARENT" layoutX="737.0" layoutY="850.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 95.0, -24.0, 95.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_4_3" fx:id="cell_4_3" fill="TRANSPARENT" layoutX="865.0" layoutY="852.0" onMousePressed="#gestisciClickCasella" points="-16.0, -28.0, 89.0, -24.0, 89.0, 104.0, -25.0, 104.0" />
+             <Polygon id="cell_4_4" fx:id="cell_4_4" fill="TRANSPARENT" layoutX="978.0" layoutY="853.0" onMousePressed="#gestisciClickCasella" points="-10.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_4_5" fx:id="cell_4_5" fill="TRANSPARENT" layoutX="1096.0" layoutY="850.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 89.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_4_6" fx:id="cell_4_6" fill="TRANSPARENT" layoutX="1211.0" layoutY="850.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 96.0, 104.0, -16.0, 104.0" />
+             <Polygon id="cell_4_7" fx:id="cell_4_7" fill="TRANSPARENT" layoutX="1324.0" layoutY="853.0" onMousePressed="#gestisciClickCasella" points="-17.0, -24.0, 89.0, -24.0, 96.0, 104.0, -7.0, 104.0" />
+             <Polygon id="cell_4_8" fx:id="cell_4_8" fill="TRANSPARENT" layoutX="1445.0" layoutY="855.0" onMousePressed="#gestisciClickCasella" points="-25.0, -27.0, 89.0, -24.0, 96.0, 104.0, -16.0, 104.0" />
+         </children>
+      </AnchorPane>
+      <HBox layoutX="20.0" layoutY="20.0" maxHeight="100.0" maxWidth="1880.0" prefHeight="100.0" prefWidth="1880.0" spacing="50.0">
+         <children>
+            <Button alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#selezionaArciere" prefHeight="100.0" prefWidth="100.0" text="ARCIERE" />
+            <Button mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="CAVALIERE" />
+            <Button mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Button" />
+            <Button mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Button" />
+            <Label fx:id="testoMonete" ellipsisString="" text="MONETE: 150" textFill="#eeff00">
+               <font>
+                  <Font size="65.0" />
+               </font>
+            </Label>
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>

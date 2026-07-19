@@ -8,7 +8,7 @@ public class MapMask {
     private final int COLOUMNS = 9;
 
     //monete
-    private int monete = 150;
+    private int monete = 10000000;
 
 
     public MapMask() {

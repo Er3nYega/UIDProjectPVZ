@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unical.uid.progettoesameuid.controller.MenuController">
+   <children>
+      <StackPane layoutX="-5.0" layoutY="-5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <ImageView fitHeight="1080.0" fitWidth="1920.0" nodeOrientation="INHERIT" pickOnBounds="true">
+               <image>
+                  <Image url="@/sfondo.png" />
+               </image>
+            </ImageView>
+             <VBox alignment="CENTER" prefHeight="1080.0" prefWidth="1920.0" spacing="50.0">
+                 <stylesheets>
+                     <URL value="@/style.css" />
+                 </stylesheets>
+                 <children>
+                     <Button fx:id="bottoneGioca" alignment="CENTER" contentDisplay="CENTER" ellipsisString="" lineSpacing="4.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#gestisciAvviaGioco" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale" textAlignment="CENTER">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <graphic>
+                        <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../../images/bottone_normale.png" />
+                           </image>
+                        </ImageView>
+                     </graphic></Button>
+                  <Button fx:id="settings" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#apriSettings" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale">
+                     <graphic>
+                        <ImageView fitHeight="100.0" fitWidth="300.0" onMouseClicked="#apriSettings" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../../images/bottone-settings.png" />
+                           </image>
+                        </ImageView>
+                     </graphic></Button>
+                     <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale">
+                     <graphic>
+                        <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../../images/bottone_exit.png" />
+                           </image>
+                        </ImageView>
+                     </graphic></Button>
+                 </children>
+             </VBox>
+            <VBox fx:id="panelSettings" alignment="CENTER" maxHeight="600.0" maxWidth="400.0" prefHeight="600.0" prefWidth="400.0" style="-fx-background-color: #2b1d16; -fx-border-color: #ffd700; -fx-border-width: 4px; -fx-border-radius: 10px; -fx-background-radius: 10px;" visible="false">
+               <children>
+                  <Label alignment="TOP_CENTER" contentDisplay="TOP" ellipsisString="" text="IMPOSTAZIONI" textFill="WHITE" translateY="-300.0">
+                     <font>
+                        <Font size="45.0" />
+                     </font>
+                  </Label>
+                  <Button fx:id="backButton" mnemonicParsing="false" onMouseClicked="#backSettings" prefHeight="50.0" prefWidth="100.0" text="BACK" />
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+   </children>
+</AnchorPane>

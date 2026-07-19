@@ -4,10 +4,11 @@ import com.almasb.fxgl.app.MainWindow;
 import it.unical.uid.progettoesameuid.controller.GiocoController;
 import it.unical.uid.progettoesameuid.controller.MenuController;
 import it.unical.uid.progettoesameuid.model.MapMask;
-import it.unical.uid.progettoesameuid.view.MapView;
+
 import it.unical.uid.progettoesameuid.view.MenuView;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -35,30 +36,68 @@ public class HelloApplication extends Application {
     }
 
     public void showMenu() {
-        MenuView menuView = new MenuView();
-        // Passiamo la callback per cambiare schermata
-        MenuController menuController = new MenuController(menuView, this::showMap);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unical/uid/progettoesameuid/MenuPrincipale.fxml"));
+            Parent root = loader.load();
 
-        Scene scenaMenu = new Scene(menuView, 1920, 1080);
-        applicaCursoreSpada(scenaMenu);
-        primaryStage.setScene(scenaMenu);
+            MenuController controller = loader.getController();
+            controller.setMainApp(this);
+
+            Scene scenaMenu = new Scene(root, 1920, 1080);
+            primaryStage.setTitle("Resonance: Medieval Defense");
+            primaryStage.setScene(scenaMenu);
+
+            // ==========================================
+            // RIGA MAGICA PER IL FULL SCREEN DIRETTAMENTE ALL'AVVIO
+            // ==========================================
+            primaryStage.setFullScreen(true);
+            primaryStage.setFullScreenExitHint(""); // Rende il testo del suggerimento vuoto
+            primaryStage.show();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void showMap() {
-        System.out.println("Caricamento mappa...");
+        System.out.println("Caricamento mappa via FXML...");
 
-        // 1. Creiamo il MODEL
-        MapMask model = new MapMask();
+        try {
+            // 1. Carichiamo il file FXML della mappa
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unical/uid/progettoesameuid/MappaGioco.fxml"));
+            Parent rootMappa = loader.load();
 
-        // 2. Creiamo la VIEW
-        MapView giocoView = new MapView();
+            // 2. Creiamo il MODEL logico del gioco
+            MapMask model = new MapMask();
 
-        // 3. Colleghiamo entrambi nel CONTROLLER (passando sia model che view!)
-        GiocoController giocoController = new GiocoController(model, giocoView);
+            // 3. Recuperiamo il CONTROLLER generato automaticamente da JavaFX tramite l'FXML
+            GiocoController giocoController = loader.getController();
 
-        Scene scenaGioco = new Scene(giocoView, 1024, 768);
-        applicaCursoreSpada(scenaGioco);
-        primaryStage.setScene(scenaGioco);
+            // Iniettiamo il modello logico appena creato dentro il controller
+            giocoController.setModel(model);
+
+            // 4. Creiamo la Scena con il root FXML caricato
+            Scene scenaGioco = new Scene(rootMappa, 1920, 1080);
+
+            // Applichiamo il tuo cursore personalizzato a spada
+            applicaCursoreSpada(scenaGioco);
+
+            // Configuri lo Stage
+            primaryStage.setTitle("Resonance: Medieval Defense");
+            primaryStage.setScene(scenaGioco);
+
+            // ==========================================
+            // RIGA MAGICA PER IL FULL SCREEN DIRETTAMENTE ALL'AVVIO
+            // ==========================================
+            primaryStage.setFullScreen(true);
+            primaryStage.setFullScreenExitHint("");
+            primaryStage.show();
+
+        } catch (IOException e) {
+            System.err.println("Errore fatale nel caricamento di MappaGioco.fxml!");
+            e.printStackTrace();
+        }
     }
 
 
