@@ -11,4 +11,5 @@ module it.unical.uid.progettoesameuid {
     opens it.unical.uid.progettoesameuid.controller to javafx.fxml;
 
     exports it.unical.uid.progettoesameuid;
+    opens it.unical.uid.progettoesameuid.model to javafx.fxml;
 }
