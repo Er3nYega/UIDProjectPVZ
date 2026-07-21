@@ -20,7 +20,7 @@ public class MenuController {
 
 
 
-    private HelloApplication mainApp; // Riferimento alla classe principale per cambiare scena
+     // Riferimento alla classe principale per cambiare scena
 
     @FXML
     private VBox panelSettings;
@@ -28,7 +28,8 @@ public class MenuController {
     @FXML
     private Button bottoneGioca; // Deve avere lo stesso identico fx:id di Scene Builder
 
-    // Questo serve per dare al controller il riferimento all'applicazione principale
+    private HelloApplication mainApp;
+
     public void setMainApp(HelloApplication mainApp) {
         this.mainApp = mainApp;
     }
@@ -71,6 +72,18 @@ public class MenuController {
     /**
      * Viene chiamato quando il giocatore clicca sul pulsante CHIUDI dentro le impostazioni
      */
+
+    @FXML
+    private void esciGioco() { // Assicurati che questo sia il nome del metodo gestito da onAction nell'FXML
+        System.out.println("👋 Chiusura del gioco in corso...");
+
+        // Ferma il toolkit di JavaFX
+        Platform.exit();
+
+        // Chiude definitivamente il processo e rilascia la memoria
+        System.exit(0);
+    }
+
     @FXML
     private void backSettings() {
         panelSettings.setVisible(false);

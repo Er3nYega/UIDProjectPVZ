@@ -1,5 +1,6 @@
 package it.unical.uid.progettoesameuid.controller;
 
+import it.unical.uid.progettoesameuid.HelloApplication;
 import it.unical.uid.progettoesameuid.model.*;
 import it.unical.uid.progettoesameuid.view.AllyView;
 import it.unical.uid.progettoesameuid.view.BulletView;
@@ -107,14 +108,14 @@ public class GiocoController {
 
         areaGiocoAnchor.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-                newScene.setOnKeyPressed(event -> {
+                newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
                     if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
                         togglePausa();
+                        event.consume(); // Evita conflitti
                     }
                 });
             }
         });
-
         // AVVIO GAME LOOP
         avviaOndata();
     }
@@ -130,23 +131,20 @@ public class GiocoController {
     @FXML
     public void apriPausa() {
         inPausa = true;
-
-        // 1. Ferma il timer principale della logica (spawn, collisioni, IA)
         if (gameLoop != null) {
             gameLoop.stop();
         }
 
-        // 2. Mette in PAUSA le animazioni di tutti gli alleati
-        for (AllyView alleato : alleatiInGioco) {
-            alleato.pausaAnimazione(); // Pausa i fotogrammi/sprite
+        // Mette in pausa le animazioni
+        for (AllyView alleato : alleatiInGioco) { alleato.pausaAnimazione(); }
+        for (EnemyView nemico : nemiciAttivi) { nemico.pausaAnimazione(); }
+
+        // CENTRAMENTO PERFETTO DEL MENU SU LARGHEZZA 1920 E ALTEZZA 1080
+        if (menuPausa != null) {
+            menuPausa.setLayoutX((1920.0 - menuPausa.getMinWidth()) / 2.0);
+            menuPausa.setLayoutY((1080.0 - 450.0) / 2.0);
         }
 
-        // 3. Mette in PAUSA i movimento/animazioni dei nemici
-        for (EnemyView nemico : nemiciAttivi) {
-            nemico.pausaAnimazione();
-        }
-
-        // 4. Mostra l'overlay grafico
         menuPausa.setVisible(true);
         menuPausa.toFront();
     }
@@ -189,13 +187,30 @@ public class GiocoController {
             gameLoop.stop();
         }
 
-        // Torna alla scena del Menu Principale
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/it/unical/uid/progettoesameuid/MenuPrincipale.fxml"));
+            javafx.stage.Stage stage = (javafx.stage.Stage) areaGiocoAnchor.getScene().getWindow();
+
+            // Carichiamo l'FXML del Menu
+            var resource = getClass().getResource("/it/unical/uid/progettoesameuid/MenuPrincipale.fxml");
+            if (resource == null) resource = getClass().getResource("/MenuPrincipale.fxml");
+
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(resource);
             javafx.scene.Parent root = loader.load();
-            areaGiocoAnchor.getScene().setRoot(root);
+
+            // Colleghiamo il MenuController alla finestra principale
+            MenuController menuController = loader.getController();
+            if (menuController != null) {
+                // Se hai un riferimento a HelloApplication o un gestore, riassegnalo
+                // Esempio: menuController.setMainApp(app);
+            }
+
+            // Usiamo la nostra vista scalata per evitare problemi di risoluzione
+            HelloApplication app = new HelloApplication();
+            app.start(stage);
+
         } catch (Exception e) {
             System.err.println("Errore nel caricamento del Menu: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -208,6 +223,12 @@ public class GiocoController {
 
     @FXML
     private void gestisciClickCasella(MouseEvent event) {
+        // 🛑 SE SIAMO IN PAUSA O IL POPUP SELEZIONE È APERTO, BLOCCA I CLICK SULLA GRIGLIA
+        if (inPausa || (popupSceltaAlleato != null && popupSceltaAlleato.isVisible())) {
+            System.out.println("⚠️ Impossibile piazzare unità: gioco in pausa o popup attivo!");
+            return;
+        }
+
         Polygon poligonoCliccato = (Polygon) event.getSource();
         String id = poligonoCliccato.getId();
 
@@ -416,13 +437,13 @@ public class GiocoController {
                 }
             }
 
-            if (p.getLayoutX() > 1920) {
+            // 🎯 RIMozione PROIETTILE PRIMA DEL BORDO MAPPA (Evita di espandere l'AnchorPane)
+            if (p.getLayoutX() > 1850.0) {
                 areaGiocoAnchor.getChildren().remove(p);
                 proiettiliAttivi.remove(i);
             }
         }
     }
-
     // --- GESTIONE ONDATE E SPAWN ---
 
     public void avviaOndata() {

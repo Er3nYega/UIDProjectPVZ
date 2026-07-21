@@ -44,7 +44,7 @@
                            </image>
                         </ImageView>
                      </graphic></Button>
-                     <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale">
+                     <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#esciGioco" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale">
                      <graphic>
                         <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
                            <image>

@@ -214,24 +214,32 @@
                 style="-fx-background-color: #333; -fx-text-fill: gold; -fx-font-size: 20px; -fx-font-weight: bold; -fx-border-color: gold; -fx-border-radius: 5; -fx-background-radius: 5;"
                 text="⏸" />
 
-        <!-- MENU DI PAUSA (NASCCOSTO DI DEFAULT) -->
-        <VBox fx:id="menuPausa" alignment="CENTER" prefHeight="450.0" prefWidth="400.0" spacing="20.0" visible="false"
-              AnchorPane.bottomAnchor="315.0" AnchorPane.leftAnchor="760.0" AnchorPane.rightAnchor="760.0" AnchorPane.topAnchor="315.0"
-              style="-fx-background-color: rgba(20, 20, 20, 0.95); -fx-background-radius: 20; -fx-border-color: gold; -fx-border-width: 3; -fx-border-radius: 20; -fx-padding: 30;">
+        <!-- MENU DI PAUSA (NIENTE PIÙ TESTI TAGLIATI O TRE PUNTINI) -->
+        <VBox fx:id="menuPausa" alignment="CENTER" spacing="20.0" visible="false"
+              layoutX="710.0" layoutY="290.0" prefWidth="500.0" minWidth="500.0"
+              style="-fx-background-color: rgba(20, 20, 20, 0.95); -fx-background-radius: 20; -fx-border-color: gold; -fx-border-width: 3; -fx-border-radius: 20; -fx-padding: 35;">
             <children>
                 <Label text="PAUSA GIOCO" textFill="#ffd700">
                     <font>
-                        <Font name="System Bold" size="28.0" />
+                        <Font name="System Bold" size="32.0" />
                     </font>
                 </Label>
-                <Button mnemonicParsing="false" onAction="#riprendiGioco" prefWidth="250.0"
-                        style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;" text="RIPRENDI" />
-                <Button mnemonicParsing="false" onAction="#salvaPartita" prefWidth="250.0"
-                        style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;" text="SALVA PARTITA" />
-                <Button mnemonicParsing="false" onAction="#apriSettings" prefWidth="250.0"
-                        style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;" text="SETTINGS" />
-                <Button mnemonicParsing="false" onAction="#esciSenzaSalvare" prefWidth="250.0"
-                        style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;" text="ESCI SENZA SALVARE" />
+
+                <Button mnemonicParsing="false" onAction="#riprendiGioco"
+                        prefHeight="50.0" prefWidth="380.0" minWidth="380.0"
+                        style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px; -fx-background-radius: 8;" text="RIPRENDI" />
+
+                <Button mnemonicParsing="false" onAction="#salvaPartita"
+                        prefHeight="50.0" prefWidth="380.0" minWidth="380.0"
+                        style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px; -fx-background-radius: 8;" text="SALVA PARTITA" />
+
+                <Button mnemonicParsing="false" onAction="#apriSettings"
+                        prefHeight="50.0" prefWidth="380.0" minWidth="380.0"
+                        style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px; -fx-background-radius: 8;" text="SETTINGS" />
+
+                <Button mnemonicParsing="false" onAction="#esciSenzaSalvare"
+                        prefHeight="50.0" prefWidth="380.0" minWidth="380.0"
+                        style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px; -fx-background-radius: 8;" text="ESCI SENZA SALVARE" />
             </children>
         </VBox>
     </children>
