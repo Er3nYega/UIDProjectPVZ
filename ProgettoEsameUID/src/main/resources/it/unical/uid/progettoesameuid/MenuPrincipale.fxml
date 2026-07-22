@@ -4,67 +4,132 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unical.uid.progettoesameuid.controller.MenuController">
-   <children>
-      <StackPane layoutX="-5.0" layoutY="-5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <children>
-            <ImageView fitHeight="1080.0" fitWidth="1920.0" nodeOrientation="INHERIT" pickOnBounds="true">
-               <image>
-                  <Image url="@/sfondo.png" />
-               </image>
-            </ImageView>
-             <VBox alignment="CENTER" prefHeight="1080.0" prefWidth="1920.0" spacing="50.0">
-                 <stylesheets>
-                     <URL value="@/style.css" />
-                 </stylesheets>
-                 <children>
-                     <Button fx:id="bottoneGioca" alignment="CENTER" contentDisplay="CENTER" ellipsisString="" lineSpacing="4.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#gestisciAvviaGioco" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale" textAlignment="CENTER">
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
-                     <graphic>
-                        <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../../../../images/bottone_normale.png" />
-                           </image>
-                        </ImageView>
-                     </graphic></Button>
-                  <Button fx:id="settings" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#apriSettings" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale">
-                     <graphic>
-                        <ImageView fitHeight="100.0" fitWidth="300.0" onMouseClicked="#apriSettings" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../../../../images/bottone-settings.png" />
-                           </image>
-                        </ImageView>
-                     </graphic></Button>
-                     <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#esciGioco" prefHeight="75.0" prefWidth="300.0" styleClass="bottone-medievale">
-                     <graphic>
-                        <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../../../../images/bottone_exit.png" />
-                           </image>
-                        </ImageView>
-                     </graphic></Button>
-                 </children>
-             </VBox>
-            <VBox fx:id="panelSettings" alignment="CENTER" maxHeight="600.0" maxWidth="400.0" prefHeight="600.0" prefWidth="400.0" style="-fx-background-color: #2b1d16; -fx-border-color: #ffd700; -fx-border-width: 4px; -fx-border-radius: 10px; -fx-background-radius: 10px;" visible="false">
-               <children>
-                  <Label alignment="TOP_CENTER" contentDisplay="TOP" ellipsisString="" text="IMPOSTAZIONI" textFill="WHITE" translateY="-300.0">
-                     <font>
-                        <Font size="45.0" />
-                     </font>
-                  </Label>
-                  <Button fx:id="backButton" mnemonicParsing="false" onMouseClicked="#backSettings" prefHeight="50.0" prefWidth="100.0" text="BACK" />
-               </children>
-            </VBox>
-         </children>
-      </StackPane>
-   </children>
+    <!-- 🎨 1. COLLEGAMENTO CSS SULLA RADICE (Vale per TUTTI i pannelli e i bottoni) -->
+    <stylesheets>
+        <URL value="@/style.css" />
+    </stylesheets>
+
+    <children>
+        <StackPane layoutX="-5.0" layoutY="-5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <children>
+                <ImageView fitHeight="1080.0" fitWidth="1920.0" nodeOrientation="INHERIT" pickOnBounds="true">
+                    <image>
+                        <Image url="@/sfondo.png" />
+                    </image>
+                </ImageView>
+
+                <!-- CONTENITORE PULSANTI PRINCIPALI -->
+                <VBox alignment="CENTER" prefHeight="1080.0" prefWidth="1920.0" spacing="50.0">
+                    <children>
+                        <!-- BOTTONE START -->
+                        <Button fx:id="bottoneGioca" mnemonicParsing="false" onAction="#gestisciAvviaGioco"
+                                prefHeight="75.0" prefWidth="300.0"
+                                style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="bottone-medievale">
+                            <graphic>
+                                <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../../../../images/bottone_normale.png" />
+                                    </image>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+
+                        <!-- BOTTONE SETTINGS -->
+                        <Button fx:id="settings" mnemonicParsing="false" onAction="#apriSettings"
+                                prefHeight="75.0" prefWidth="300.0"
+                                style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="bottone-medievale">
+                            <graphic>
+                                <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../../../../images/bottone-settings.png" />
+                                    </image>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+
+                        <!-- BOTTONE EXIT -->
+                        <Button mnemonicParsing="false" onAction="#esciGioco"
+                                prefHeight="75.0" prefWidth="300.0"
+                                style="-fx-background-color: transparent; -fx-padding: 0;" styleClass="bottone-medievale">
+                            <graphic>
+                                <ImageView fitHeight="100.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../../../../images/bottone_exit.png" />
+                                    </image>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                    </children>
+                </VBox>
+
+                <!-- SOTTOMENU SELEZIONE SLOT SALVATAGGI -->
+                <VBox fx:id="panelSlot" alignment="CENTER" fillWidth="false" maxHeight="520.0" maxWidth="450.0" prefHeight="520.0" prefWidth="450.0" spacing="10.0" style="-fx-padding: 60px 35px 35px 35px;" visible="false">
+                    <children>
+                        <!-- SLOT 1 + CESTINO -->
+                        <HBox alignment="CENTER" spacing="8.0">
+                            <children>
+                                <Button fx:id="btnSlot1" mnemonicParsing="false" onAction="#caricaSlot1" prefHeight="40.0" prefWidth="210.0" styleClass="bottone-slot" text="SLOT 1 - VUOTO" />
+                                <Button mnemonicParsing="false" onAction="#eliminaSlot1" prefHeight="40.0" prefWidth="40.0" styleClass="bottone-cestino" text="🗑" />
+                            </children>
+                        </HBox>
+
+                        <!-- SLOT 2 + CESTINO -->
+                        <HBox alignment="CENTER" spacing="8.0">
+                            <children>
+                                <Button fx:id="btnSlot2" mnemonicParsing="false" onAction="#caricaSlot2" prefHeight="40.0" prefWidth="210.0" styleClass="bottone-slot" text="SLOT 2 - VUOTO" />
+                                <Button mnemonicParsing="false" onAction="#eliminaSlot2" prefHeight="40.0" prefWidth="40.0" styleClass="bottone-cestino" text="🗑" />
+                            </children>
+                        </HBox>
+
+                        <!-- SLOT 3 + CESTINO -->
+                        <HBox alignment="CENTER" spacing="8.0">
+                            <children>
+                                <Button fx:id="btnSlot3" mnemonicParsing="false" onAction="#caricaSlot3" prefHeight="40.0" prefWidth="210.0" styleClass="bottone-slot" text="SLOT 3 - VUOTO" />
+                                <Button mnemonicParsing="false" onAction="#eliminaSlot3" prefHeight="40.0" prefWidth="40.0" styleClass="bottone-cestino" text="🗑" />
+                            </children>
+                        </HBox>
+
+                        <!-- BOTTONE INDIETRO -->
+                        <Button mnemonicParsing="false" onAction="#chiudiSottomenuSalvataggi" prefHeight="32.0" prefWidth="100.0" styleClass="bottone-indietro" text="INDIETRO">
+                            <VBox.margin>
+                                <Insets top="8.0" />
+                            </VBox.margin>
+                        </Button>
+                    </children>
+                </VBox>
+
+                <!-- PANNELLO SETTINGS -->
+                <VBox fx:id="panelSettings" alignment="CENTER" fillWidth="false" maxHeight="600.0" maxWidth="550.0" prefHeight="600.0" prefWidth="550.0" spacing="20.0" style="-fx-padding: 60px 40px 40px 40px;" visible="false">
+                    <children>
+                        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="280.0" prefWidth="280.0" spacing="10.0">
+                            <children>
+                                <Label styleClass="testo-popup" text="Volume Musica" textFill="#3b3946">
+                                    <font>
+                                        <Font name="System Bold" size="16.0" />
+                                    </font>
+                                </Label>
+                                <Slider fx:id="sliderMusica" maxHeight="-Infinity" maxWidth="260.0" max="1.0" min="0.0" prefWidth="260.0" showTickLabels="false" showTickMarks="false" value="0.5" />
+                            </children>
+                        </VBox>
+
+                        <Button fx:id="backButton"  maxHeight="40.0" maxWidth="130.0" minHeight="40.0" minWidth="130.0" mnemonicParsing="false" onAction="#backSettings" prefHeight="40.0" prefWidth="130.0" style="-fx-background-color: #3b3946; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8px;" text="INDIETRO">
+                            <VBox.margin>
+                                <Insets top="10.0" />
+                            </VBox.margin>
+                        </Button>
+                    </children>
+                </VBox>
+            </children>
+        </StackPane>
+    </children>
 </AnchorPane>
