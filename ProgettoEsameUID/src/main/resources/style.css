@@ -1,19 +1,114 @@
+
+
+/* BOTTONI MEDIEVALI TRASPARENTI */
 .bottone-medievale {
-    -fx-background-color: transparent;    /* Rende invisibile il rettangolo grigio */
-    -fx-border-color: transparent;        /* Rende invisibili i bordi di default */
-    -fx-text-fill: #ffd700;               /* Testo Oro */
-    -fx-font-family: "Georgia", serif;
-    -fx-font-size: 22px;
-    -fx-font-weight: bold;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
     -fx-cursor: hand;
 }
 
-.bottone-medievale:hover {
-    -fx-text-fill: #ffffff;               /* Il testo diventa bianco al passaggio del mouse */
+.bottone-medievale:hover,
+.bottone-medievale:focused,
+.bottone-medievale:showing,
+.bottone-medievale:armed,
+.bottone-medievale:pressed {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
 }
 
-/* Opzionale: quando il giocatore clicca effettivamente il pulsante */
 .bottone-medievale:pressed {
-    -fx-scale-x: 0.95; /* Si rimpicciolisce leggermente dando l'effetto "schiacciato" */
+    -fx-scale-x: 0.95;
     -fx-scale-y: 0.95;
+}
+
+/* SFONDO PANNELLO */
+.pannello-impostazioni {
+    -fx-background-image: url("/pannelllo.png"); /* Corretta la tripla 'l' */
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-padding: 30px;
+}
+
+/* STILE BASE BOTTONE SLOT */
+.bottone-slot {
+    -fx-background-color: #57463f;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-border-color: #8b5a2b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+
+Button.slot-vuoto {
+    -fx-background-color: #3a3a42;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #8b5a2b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+}
+
+Button.slot-vuoto:hover {
+    -fx-background-color: #5a3d2e;
+    -fx-border-color: #ffd700;
+    -fx-text-fill: #ffffff;
+}
+
+Button.slot-pieno {
+    -fx-background-color: #57463f;
+    -fx-text-fill: #d6c4c3;
+    -fx-border-color: #ffd700;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+}
+
+Button.slot-pieno:hover {
+    -fx-background-color: #285431;
+    -fx-text-fill: #ffffff;
+}
+/* BOTTONE CESTINO */
+/* --- BOTTONE CESTINO (🗑) --- */
+.bottone-cestino {
+    -fx-background-color: #a82828;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-border-color: #f44336;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.bottone-cestino:hover {
+    -fx-background-color: #d32f2f;
+    -fx-border-color: #ff6659;
+}
+
+/* --- BOTTONE INDIETRO --- */
+.bottone-indietro {
+    -fx-background-color: #57463f;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-border-color: #8b5a2b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.bottone-indietro:hover {
+    -fx-background-color: #3d3540;
+    -fx-border-color: #3d3540;
+    -fx-text-fill: #ffffff;
 }
