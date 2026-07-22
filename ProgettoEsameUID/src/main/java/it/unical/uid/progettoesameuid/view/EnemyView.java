@@ -11,87 +11,108 @@ import javafx.util.Duration;
 
 public class EnemyView extends StackPane {
 
+    public enum StatoNemico { CAMMINATA, ATTACCO }
+
     private final ImageView imageView;
     private int rigaAttuale;
     private double velocita = 0.4; // Velocità di avanzamento verso sinistra
 
     // --- PARAMETRI SPRITESHEET ---
-    private static final int LARGHEZZA_FRAME = 200; // Larghezza di un singolo fotogramma in px
-    private static final int ALTEZZA_FRAME = 200;   // Altezza di un singolo fotogramma in px
-    private static final int TOTALE_FRAME = 8;      // Numero di frame presenti nella camminata
+    private static final int LARGHEZZA_FRAME = 200;
+    private static final int ALTEZZA_FRAME = 200;
+    private static final int TOTALE_FRAME = 8;
     private int salute = 100;
 
-    private Transition animazioneCamminata; // Riferimento per pausa e ripresa
+    private Transition animazioneCorrente;
     private long ultimoAttaccoTime = 0;
+
+    private String nomeNemicoBase;
+    private StatoNemico statoAttuale = StatoNemico.CAMMINATA;
 
     public EnemyView(String nomeNemico, int rigaIniziale) {
         this.rigaAttuale = rigaIniziale;
         this.imageView = new ImageView();
 
+        // Estraiamo il nome base (es. se nomeNemico è "Skeleton_Walk", il base diventa "Skeleton")
+        this.nomeNemicoBase = nomeNemico.contains("_") ? nomeNemico.split("_")[0] : nomeNemico;
+
+        this.getChildren().add(imageView);
+
+        caricaSpriteSheet(nomeNemicoBase + "_Walk");
+        avviaAnimazione();
+    }
+
+    public void setStato(StatoNemico nuovoStato) {
+        if (this.statoAttuale == nuovoStato) {
+            return;
+        }
+
+        this.statoAttuale = nuovoStato;
+
+        String nomeFileSprite = switch (nuovoStato) {
+            case ATTACCO -> nomeNemicoBase + "_Attack";
+            case CAMMINATA -> nomeNemicoBase + "_Walk";
+        };
+
+        caricaSpriteSheet(nomeFileSprite);
+    }
+
+    private void caricaSpriteSheet(String nomeFile) {
         try {
-            // Carichiamo lo spritesheet (es: /images/scheletro.png)
-            String percorso = "/images/" + nomeNemico + ".png";
+            String percorso = "/images/" + nomeFile + ".png";
             var stream = getClass().getResourceAsStream(percorso);
 
             if (stream != null) {
                 Image spriteSheet = new Image(stream);
                 imageView.setImage(spriteSheet);
 
-                // Mostra inizialmente solo il primo fotogramma
                 imageView.setViewport(new Rectangle2D(0, 0, LARGHEZZA_FRAME, ALTEZZA_FRAME));
 
-                // Forziamo le dimensioni visive reali
                 imageView.setFitWidth(LARGHEZZA_FRAME);
                 imageView.setFitHeight(ALTEZZA_FRAME);
                 imageView.setPreserveRatio(true);
 
-                this.getChildren().add(imageView);
-
-                // AVVIAMO L'ANIMAZIONE DI CAMMINATA
-                avviaAnimazioneCamminata();
+                avviaAnimazione();
             } else {
-                System.err.println("ERRORE: Impossibile trovare lo spritesheet per il nemico: " + nomeNemico);
+                System.err.println("ERRORE: Impossibile trovare lo spritesheet: " + percorso);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void avviaAnimazioneCamminata() {
-        animazioneCamminata = new Transition() {
+    private void avviaAnimazione() {
+        if (animazioneCorrente != null) {
+            animazioneCorrente.stop();
+        }
+
+        animazioneCorrente = new Transition() {
             {
-                // Un ciclo completo di camminata dura 600 millisecondi
                 setCycleDuration(Duration.millis(600));
                 setInterpolator(Interpolator.LINEAR);
             }
 
             @Override
             protected void interpolate(double k) {
-                // Calcola l'indice del frame da mostrare (da 0 a TOTALE_FRAME - 1)
                 int index = Math.min((int) Math.floor(k * TOTALE_FRAME), TOTALE_FRAME - 1);
-
-                // Sposta la finestra di taglio lungo l'asse X dello spritesheet
                 int x = index * LARGHEZZA_FRAME;
-
                 imageView.setViewport(new Rectangle2D(x, 0, LARGHEZZA_FRAME, ALTEZZA_FRAME));
             }
         };
 
-        // Ripeti la camminata all'infinito finché il nemico è vivo
-        animazioneCamminata.setCycleCount(Animation.INDEFINITE);
-        animazioneCamminata.play();
+        animazioneCorrente.setCycleCount(Animation.INDEFINITE);
+        animazioneCorrente.play();
     }
 
-    // --- GESTIONE PAUSA/RIPRESA ANIMAIONE ---
     public void pausaAnimazione() {
-        if (animazioneCamminata != null) {
-            animazioneCamminata.pause();
+        if (animazioneCorrente != null) {
+            animazioneCorrente.pause();
         }
     }
 
     public void riprendiAnimazione() {
-        if (animazioneCamminata != null) {
-            animazioneCamminata.play();
+        if (animazioneCorrente != null) {
+            animazioneCorrente.play();
         }
     }
 
@@ -103,18 +124,37 @@ public class EnemyView extends StackPane {
         this.salute -= danno;
         System.out.println("Nemico in riga " + getRigaAttuale() + " ha subito " + danno + " danni. HP rimanenti: " + salute);
 
-        // Un piccolo effetto visivo quando viene colpito (lampeggia di rosso)
         this.setOpacity(0.6);
         javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(100));
         pause.setOnFinished(e -> this.setOpacity(1.0));
         pause.play();
 
+        return isDead();
+    }
+
+    public boolean isDead() {
         return this.salute <= 0;
     }
 
-    // GETTER E SETTER
+    // ==========================================
+    // 🎯 GETTER E SETTER COMPATIBILI CON DB E CONTROLLER
+    // ==========================================
+
+    public String getTipoNemico() {
+        return nomeNemicoBase; // Restituisce es: "Skeleton", "Zombie", "Orco"
+    }
+
+    public int getHpAttuali() {
+        return salute;
+    }
+
+    public void setHp(int nuoviHp) {
+        this.salute = nuoviHp;
+    }
+
     public int getRigaAttuale() { return rigaAttuale; }
     public int getSalute() { return salute; }
     public long getUltimoAttaccoTime() { return ultimoAttaccoTime; }
     public void setUltimoAttaccoTime(long time) { this.ultimoAttaccoTime = time; }
+    public StatoNemico getStatoAttuale() { return statoAttuale; }
 }

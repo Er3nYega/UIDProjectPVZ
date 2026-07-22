@@ -71,6 +71,8 @@ public class AllyView extends StackPane {
     }
 
     public void impostaStato(StatoAlleato nuovoStato) {
+        // 🎯 SE È GIÀ NELLO STATO RICHIESTO, NON RIAVVIARE L'ANIMAZIONE!
+        // Questo evita gli spasmi a 60 FPS quando il Model conferma l'attacco.
         if (this.statoAttuale == nuovoStato) return;
 
         this.statoAttuale = nuovoStato;
@@ -93,12 +95,10 @@ public class AllyView extends StackPane {
 
             imageView.setViewport(new Rectangle2D(0, 0, larghezzaSingoloFrame, altezzaFrame));
 
-            // AGGIORNIAMO L'IMAGEVIEW A 200x200
             imageView.setFitWidth(200);
             imageView.setFitHeight(200);
             imageView.setPreserveRatio(true);
 
-            // Durata ciclo animazione
             double durata = (nuovoStato == StatoAlleato.ATTACCO) ? 1200 : 800;
             avviaLoopAnimazione(totaleFrame, larghezzaSingoloFrame, altezzaFrame, durata, nuovoStato == StatoAlleato.ATTACCO);
         }

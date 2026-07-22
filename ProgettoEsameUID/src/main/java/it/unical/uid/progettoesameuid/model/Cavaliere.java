@@ -3,19 +3,31 @@ package it.unical.uid.progettoesameuid.model;
 public class Cavaliere extends Ally {
 
     public Cavaliere() {
-
-        super(1000, 20, 125, 1, 5000);
+        // hp: 200, danno: 30, costo: 150, range: 1, cooldown: 1200ms
+        super(200, 30, 150, 1, 1200L);
     }
 
     @Override
-    public void doAction(MapMask map, int row, int col) {
+    public boolean doAction(MapMask map, int row, int col) {
+        if (canAttack()) {
+            boolean nemicoTrovato = false;
 
-        if (canAttack() && map.hasEnemyAt(row, col + 1)) {
-            // Usiamo getFirst() per consistenza e pulizia
-            Enemy bersaglio = map.getMaskMatrix()[row][col + 1].getEnemyList().getFirst();
-            bersaglio.beDamaged(this.damage);
-            System.out.println("Il Cavaliere in [" + row + "][" + col + "] attacca il nemico davanti a sé!");
-            resetCooldown();
+            // Controlla sia la propria casella (col) sia quella davanti (col + 1)
+            for (int i = col; i <= col + getRange() && i < map.getColumns(); i++) {
+                if (map.hasEnemyAt(row, i)) {
+                    // Infligge danno al nemico presente nella casella
+                    Enemy bersaglio = map.getMaskMatrix()[row][i].getEnemyList().getFirst();
+                    bersaglio.beDamaged(this.damage);
+                    nemicoTrovato = true;
+                    break;
+                }
+            }
+
+            if (nemicoTrovato) {
+                resetCooldown();
+                return true; // 🎯 Attacco melee eseguito!
+            }
         }
+        return false;
     }
 }

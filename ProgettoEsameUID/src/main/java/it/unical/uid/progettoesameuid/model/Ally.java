@@ -38,5 +38,5 @@ public abstract class Ally extends Entity {
     public int getRange() { return range; }
 
     // Il metodo doAction rimane astratto: ogni alleato farà qualcosa di diverso
-    public abstract void doAction(MapMask map, int row, int column);
+    public abstract boolean doAction(MapMask map, int row, int column);
 }

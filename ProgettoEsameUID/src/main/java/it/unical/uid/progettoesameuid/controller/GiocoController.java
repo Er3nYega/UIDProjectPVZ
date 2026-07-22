@@ -6,20 +6,31 @@ import it.unical.uid.progettoesameuid.view.AllyView;
 import it.unical.uid.progettoesameuid.view.BulletView;
 import it.unical.uid.progettoesameuid.view.EnemyView;
 import javafx.animation.AnimationTimer;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.shape.Polygon;
+import javafx.stage.Stage;
 
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 public class GiocoController {
+
+    public static final int moneteDefault = 50;
+
     @FXML private ImageView sfondoMappa;
     @FXML private AnchorPane areaGiocoAnchor;
     @FXML private Label testoMonete;
@@ -28,36 +39,39 @@ public class GiocoController {
     @FXML private VBox popupSceltaAlleato;
     @FXML private ImageView imgCard1, imgCard2;
     @FXML private Label nomeCard1, nomeCard2, statsCard1, statsCard2;
-
-    // --- LE 6 IMAGEVIEW DEI SEI SLOT (Iniettate singolarmente da FXML) ---
-    @FXML private ImageView slotImg_0;
-    @FXML private ImageView slotImg_1;
-    @FXML private ImageView slotImg_2;
-    @FXML private ImageView slotImg_3;
-    @FXML private ImageView slotImg_4;
-    @FXML private ImageView slotImg_5;
-
-
     @FXML private VBox card2Container;
 
-    @FXML private VBox menuPausa;
-    private boolean inPausa = false;
-
-    // La lista che raccoglie le 6 ImageView
+    // --- SLOT BARRA ---
+    @FXML private ImageView slotImg_0, slotImg_1, slotImg_2, slotImg_3, slotImg_4, slotImg_5;
     private List<ImageView> immaginiSlotBarra;
 
+    // --- PANNELLI DI PAUSA E IMPOSTAZIONI ---
+    @FXML private VBox menuPausa;
+    @FXML private VBox panelSettingsPausa;
+    @FXML private VBox panelSelezionaSlotSalvataggio;
+    @FXML private Slider sliderMusicaPausa;
+
+    // --- OVERLAY GAME OVER ---
+    @FXML private VBox screenGameOver;
+    @FXML private Label lblStatOndata, lblStatNemici, lblStatAlleati, lblStatMonete;
+
+    // --- PULSANATI SALVATAGGIO IN PAUSA ---
+    @FXML private Button btnSaveSlot1;
+    @FXML private Button btnSaveSlot2;
+    @FXML private Button btnSaveSlot3;
+
+    // --- STATO DEL GIOCO ---
     private MapMask model;
+    private boolean inPausa = false;
 
     private Supplier<Ally> costruttoreAlleatoSelezionato = null;
     private int costoAlleatoSelezionato = 0;
     private String nomeAlleatoSelezionato = "";
 
-    // LISTE DIVERSE E MAPPE PER COMBATTIMENTO ED ONDATE
     private final List<Supplier<Ally>> alleatiNegliSlot = new ArrayList<>();
     private final List<AllyView> alleatiInGioco = new ArrayList<>();
     private final List<BulletView> proiettiliAttivi = new ArrayList<>();
     private final List<EnemyView> nemiciAttivi = new ArrayList<>();
-    private final Map<AllyView, Long> ultimoAttaccoMap = new HashMap<>();
 
     private int ondataAttuale = 1;
     private final int TOTALE_ONDATE = 10;
@@ -65,393 +79,113 @@ public class GiocoController {
     private long ultimoSpawnTime = 0;
     private AnimationTimer gameLoop;
 
+    private Ally opzione1, opzione2;
+    private final List<Supplier<Ally>> poolTuttiAlleati = List.of(
+            Alabardiere::new, Arciere::new, Cavaliere::new, Horseman::new,
+            Prete::new, Sacerdote::new, Soldato::new, Spadaccino::new,
+            Stregone::new, Templare::new
+    );
+
+    private final DatabaseManager dbManager = new DatabaseManager();
+    private int slotAttuale = 1;
+
+    @FXML private StackPane rootStackPane;
+    @FXML private Group scaledGroup;
+
     @FXML
     public void initialize() {
-        // 1. FONDAMENTALE: INIZIALIZZIAMO LA LISTA PER PRIMA COSA!
         immaginiSlotBarra = List.of(slotImg_0, slotImg_1, slotImg_2, slotImg_3, slotImg_4, slotImg_5);
 
         if (this.model == null) {
             this.model = new MapMask();
         }
 
-        // 2. INIZIALIZZAZIONE SLOT DI PARTENZA (Slot 0 = Arciere, Slot 1 = Cavaliere)
+        // 🎨 APPLICAZIONE SFONDO MEDIEVALE A TUTTI I POPUP IN GIOCO
+        var urlPannello = getClass().getResource("/pannelllo.png");
+        if (urlPannello != null) {
+            Image img = new Image(urlPannello.toExternalForm());
+            BackgroundSize bgSize = new BackgroundSize(100, 100, true, true, true, false);
+            BackgroundImage bgImg = new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, bgSize);
+            Background bg = new Background(bgImg);
+
+            if (menuPausa != null) menuPausa.setBackground(bg);
+            if (panelSettingsPausa != null) panelSettingsPausa.setBackground(bg);
+            if (panelSelezionaSlotSalvataggio != null) panelSelezionaSlotSalvataggio.setBackground(bg);
+        }
+
+        // Slot di partenza
         alleatiNegliSlot.add(Arciere::new);
         alleatiNegliSlot.add(Cavaliere::new);
-
-        // Carichiamo le prime due icone
         aggiornaIconaSlot(0, "Arciere");
         aggiornaIconaSlot(1, "Cavaliere");
 
-        // Impostiamo la trasparenza ai click del mouse per tutte le icone degli slot
         for (ImageView imgView : immaginiSlotBarra) {
-            if (imgView != null) {
-                imgView.setMouseTransparent(true);
-            }
+            if (imgView != null) imgView.setMouseTransparent(true);
         }
 
-        // CARICAMENTO MAPPA
-        try {
-            var risorsaStream = getClass().getResourceAsStream("/map.png");
-            if (risorsaStream != null) {
-                Image mappaImage = new Image(risorsaStream);
-                if (sfondoMappa != null) {
-                    sfondoMappa.setImage(mappaImage);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Errore caricamento mappa: " + e.getMessage());
+        caricaSfondoMappa();
+
+        if (testoMonete != null) {
+            testoMonete.setText("x" + model.getMonete());
         }
 
-        if (model != null && testoMonete != null) {
-            testoMonete.setText("MONETE: " + model.getMonete());
-        }
-
+        // Gestione tasto ESC
         areaGiocoAnchor.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
                     if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
                         togglePausa();
-                        event.consume(); // Evita conflitti
+                        event.consume();
                     }
                 });
             }
         });
-        // AVVIO GAME LOOP
+        it.unical.uid.progettoesameuid.utility.SoundManager.riproduciMusica("battle_theme.mp3");
+
+        if (sliderMusicaPausa != null) {
+            sliderMusicaPausa.setValue(it.unical.uid.progettoesameuid.utility.SoundManager.getVolumeMusica());
+            sliderMusicaPausa.valueProperty().addListener((obs, oldVal, newVal) -> {
+                it.unical.uid.progettoesameuid.utility.SoundManager.setVolumeMusica(newVal.doubleValue());
+            });
+        }
+
+        if (rootStackPane != null && scaledGroup != null) {
+            rootStackPane.widthProperty().addListener((obs, oldW, newW) -> ridimensionaSchermata());
+            rootStackPane.heightProperty().addListener((obs, oldH, newH) -> ridimensionaSchermata());
+        }
+
         avviaOndata();
     }
 
-    public void togglePausa() {
-        if (inPausa) {
-            riprendiGioco();
-        } else {
-            apriPausa();
-        }
+    private void ridimensionaSchermata() {
+        if (rootStackPane == null || scaledGroup == null) return;
+
+        double w = rootStackPane.getWidth();
+        double h = rootStackPane.getHeight();
+
+        if (w <= 0 || h <= 0) return;
+
+        double scale = Math.min(w / 1920.0, h / 1080.0);
+        scaledGroup.setScaleX(scale);
+        scaledGroup.setScaleY(scale);
     }
 
-    @FXML
-    public void apriPausa() {
-        inPausa = true;
-        if (gameLoop != null) {
-            gameLoop.stop();
-        }
-
-        // Mette in pausa le animazioni
-        for (AllyView alleato : alleatiInGioco) { alleato.pausaAnimazione(); }
-        for (EnemyView nemico : nemiciAttivi) { nemico.pausaAnimazione(); }
-
-        // CENTRAMENTO PERFETTO DEL MENU SU LARGHEZZA 1920 E ALTEZZA 1080
-        if (menuPausa != null) {
-            menuPausa.setLayoutX((1920.0 - menuPausa.getMinWidth()) / 2.0);
-            menuPausa.setLayoutY((1080.0 - 450.0) / 2.0);
-        }
-
-        menuPausa.setVisible(true);
-        menuPausa.toFront();
-    }
-
-    @FXML
-    public void riprendiGioco() {
-        inPausa = false;
-        menuPausa.setVisible(false);
-
-        // 1. Fai ripartire le animazioni visive
-        for (AllyView alleato : alleatiInGioco) {
-            alleato.riprendiAnimazione();
-        }
-
-        for (EnemyView nemico : nemiciAttivi) {
-            nemico.riprendiAnimazione();
-        }
-
-        // 2. Fai ripartire il game loop
-        if (gameLoop != null) {
-            gameLoop.start();
-        }
-    }
-    @FXML
-    private void salvaPartita() {
-        System.out.println("💾 Partita salvata con successo! (Ondata: " + ondataAttuale + ", Monete: " + model.getMonete() + ")");
-        // Qui puoi chiamare una funzione di serializzazione/salvataggio del Model se serve
-    }
-
-    @FXML
-    private void apriSettings() {
-        System.out.println("⚙️ Apertura impostazioni audio/grafica...");
-        // Puoi mostrare un sottomenu per volume/effetti sonori
-    }
-
-    @FXML
-    private void esciSenzaSalvare() {
-        System.out.println("🚪 Uscita al menu principale senza salvare...");
-        if (gameLoop != null) {
-            gameLoop.stop();
-        }
-
+    private void caricaSfondoMappa() {
         try {
-            javafx.stage.Stage stage = (javafx.stage.Stage) areaGiocoAnchor.getScene().getWindow();
-
-            // Carichiamo l'FXML del Menu
-            var resource = getClass().getResource("/it/unical/uid/progettoesameuid/MenuPrincipale.fxml");
-            if (resource == null) resource = getClass().getResource("/MenuPrincipale.fxml");
-
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(resource);
-            javafx.scene.Parent root = loader.load();
-
-            // Colleghiamo il MenuController alla finestra principale
-            MenuController menuController = loader.getController();
-            if (menuController != null) {
-                // Se hai un riferimento a HelloApplication o un gestore, riassegnalo
-                // Esempio: menuController.setMainApp(app);
+            var stream = getClass().getResourceAsStream("/map.png");
+            if (stream != null && sfondoMappa != null) {
+                sfondoMappa.setImage(new Image(stream));
             }
-
-            // Usiamo la nostra vista scalata per evitare problemi di risoluzione
-            HelloApplication app = new HelloApplication();
-            app.start(stage);
-
         } catch (Exception e) {
-            System.err.println("Errore nel caricamento del Menu: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Errore mappa: " + e.getMessage());
         }
     }
 
-    public void selezionaUnita(String nome, int costo, Supplier<Ally> costruttore) {
-        this.nomeAlleatoSelezionato = nome;
-        this.costoAlleatoSelezionato = costo;
-        this.costruttoreAlleatoSelezionato = costruttore;
-        System.out.println("Selezionato: " + nome + " (Costo: " + costo + ")");
-    }
-
-    @FXML
-    private void gestisciClickCasella(MouseEvent event) {
-        // 🛑 SE SIAMO IN PAUSA O IL POPUP SELEZIONE È APERTO, BLOCCA I CLICK SULLA GRIGLIA
-        if (inPausa || (popupSceltaAlleato != null && popupSceltaAlleato.isVisible())) {
-            System.out.println("⚠️ Impossibile piazzare unità: gioco in pausa o popup attivo!");
-            return;
-        }
-
-        Polygon poligonoCliccato = (Polygon) event.getSource();
-        String id = poligonoCliccato.getId();
-
-        String[] parti = id.split("_");
-        int rigaCliccata = Integer.parseInt(parti[1]);
-        int colonnaCliccata = Integer.parseInt(parti[2]);
-
-        gestisciPiazzamentoAlleato(rigaCliccata, colonnaCliccata, poligonoCliccato);
-    }
-
-    private void gestisciPiazzamentoAlleato(int riga, int colonna, Polygon poligono) {
-        System.out.println("DEBUG: Inizio piazzamento. Riga=" + riga + ", Colonna=" + colonna + ", Selezionato=" + nomeAlleatoSelezionato);
-
-        if (costruttoreAlleatoSelezionato == null) {
-            System.out.println("DEBUG BLOCCATO: Nessun alleato selezionato!");
-            return;
-        }
-
-        if (model != null && !model.cellaLibera(riga, colonna)) {
-            System.out.println("DEBUG BLOCCATO: Cella occupata secondo il model!");
-            return;
-        }
-
-        if (model != null && model.getMonete() < costoAlleatoSelezionato) {
-            System.out.println("DEBUG BLOCCATO: Oro insufficiente!");
-            return;
-        }
-
-        Ally nuovoAlleatoLogico = costruttoreAlleatoSelezionato.get();
-
-        if (model == null || model.sottraiMonete(costoAlleatoSelezionato)) {
-
-            if (model != null) {
-                model.getMaskMatrix()[riga][colonna].setAlly(nuovoAlleatoLogico);
-                testoMonete.setText("Monete d'Oro: " + model.getMonete());
-            }
-
-            AllyView alleatoVisivo = new AllyView(nomeAlleatoSelezionato.toLowerCase());
-
-            // IMPONIAMO SUBITO RIGA, COLONNA E RIFERIMENTO LOGICO
-            alleatoVisivo.setPosizioneGriglia(riga, colonna);
-            alleatoVisivo.setModelloAlleato(nuovoAlleatoLogico);
-
-            // Calcoliamo il centro del poligono
-            double centroX = (poligono.getPoints().get(0) + poligono.getPoints().get(4)) / 2;
-            double centroY = (poligono.getPoints().get(1) + poligono.getPoints().get(5)) / 2;
-
-            // Offset per centrare un riquadro 200x200
-            double offsetX = 100.0;
-            double offsetY = 100.0;
-
-            alleatoVisivo.setLayoutX(poligono.getLayoutX() + centroX - offsetX);
-            alleatoVisivo.setLayoutY(poligono.getLayoutY() + centroY - offsetY);
-
-            switch(riga) {
-                case 0 -> { alleatoVisivo.setScaleX(0.75); alleatoVisivo.setScaleY(0.75); }
-                case 1 -> { alleatoVisivo.setScaleX(0.83); alleatoVisivo.setScaleY(0.83); }
-                case 2 -> { alleatoVisivo.setScaleX(0.92); alleatoVisivo.setScaleY(0.92); }
-                case 3 -> { alleatoVisivo.setScaleX(1.00); alleatoVisivo.setScaleY(1.00); }
-                case 4 -> { alleatoVisivo.setScaleX(1.08); alleatoVisivo.setScaleY(1.08); }
-            }
-
-            if (alleatoVisivo.getNomeAlleato().contains("arciere") || alleatoVisivo.getNomeAlleato().contains("stregone")) {
-                // Evento di attacco a distanza al completamento della relativa animazione
-                alleatoVisivo.setOnAttackReleaseListener(() -> {
-                    long nemiciSuRiga = nemiciAttivi.stream()
-                            .filter(n -> n.getRigaAttuale() == alleatoVisivo.getRiga())
-                            .count();
-
-                    if (nemiciSuRiga > 0) {
-                        double startX = alleatoVisivo.getLayoutX() + 120.0;
-                        double startY = alleatoVisivo.getLayoutY() + 75.0;
-
-                        // Estrazione del danno con le API aggiornate (getDamage)
-                        int dannoReale = 20; // Fallback
-                        if (alleatoVisivo.getModelloAlleato() != null) {
-                            dannoReale = alleatoVisivo.getModelloAlleato().getDamage();
-                        }
-
-                        BulletView freccia = new BulletView(alleatoVisivo.getNomeAlleato(), startX, startY, alleatoVisivo.getRiga(), dannoReale);
-                        freccia.toFront();
-
-                        proiettiliAttivi.add(freccia);
-                        areaGiocoAnchor.getChildren().add(freccia);
-                    }
-                });
-            }
-
-            if (areaGiocoAnchor != null) {
-                areaGiocoAnchor.getChildren().add(alleatoVisivo);
-                alleatoVisivo.toFront();
-
-                System.out.println("DEBUG: Sprite aggiunto e portato in front!");
-                alleatiInGioco.add(alleatoVisivo);
-            } else {
-                System.err.println("DEBUG ERRORE: areaGiocoAnchor è NULL!");
-            }
-            System.out.println(nomeAlleatoSelezionato + " piazzato con successo in [" + riga + "][" + colonna + "]");
-        }
-    }
-
-    public void setModel(MapMask model) {
-        this.model = model;
-        if (testoMonete != null) {
-            testoMonete.setText("Monete d'Oro: " + model.getMonete());
-        }
-    }
-
-    // --- SELEZIONE UNITA (METODI FXML) ---
-
-    @FXML
-    private void gestisciClickSlotBarra(javafx.event.ActionEvent event) {
-        javafx.scene.control.Button btn = (javafx.scene.control.Button) event.getSource();
-        String id = btn.getId(); // es. "slotBtn_2"
-        int indexSlot = Integer.parseInt(id.split("_")[1]);
-
-        if (indexSlot < alleatiNegliSlot.size() && alleatiNegliSlot.get(indexSlot) != null) {
-            Supplier<Ally> costruttore = alleatiNegliSlot.get(indexSlot);
-            Ally esempio = costruttore.get(); // Istanza per leggere dati reali
-
-            String nome = esempio.getClass().getSimpleName();
-            int costo = esempio.getCost();
-
-            selezionaUnita(nome, costo, costruttore);
-            System.out.println("✅ Selezionato per il piazzamento dallo Slot " + (indexSlot + 1) + ": " + nome);
-        } else {
-            System.out.println("⚠️ Lo Slot " + (indexSlot + 1) + " è ancora vuoto!");
-        }
-    }
-
-
-    // --- LOGICA DI COMBATTIMENTO E ANIMAZIONI ---
-
-    private void aggiornaLogicaCombattimento(long now) {
-        for (AllyView alleato : alleatiInGioco) {
-            int rigaAlleato = alleato.getRiga();
-
-            List<EnemyView> nemiciSuRiga = nemiciAttivi.stream()
-                    .filter(n -> n.getRigaAttuale() == rigaAlleato)
-                    .toList();
-
-            String nomeUnita = alleato.getNomeAlleato().toLowerCase();
-
-            // Unità a distanza (Arciere, Stregone)
-            if (nomeUnita.contains("arciere") || nomeUnita.contains("stregone")) {
-                if (!nemiciSuRiga.isEmpty()) {
-                    alleato.impostaStato(AllyView.StatoAlleato.ATTACCO);
-                } else {
-                    alleato.impostaStato(AllyView.StatoAlleato.IDLE);
-                }
-
-                // Unità da mischia (Soldato, Spadaccino, Alabardiere, Cavaliere)
-            } else {
-                boolean nemicoVicino = nemiciSuRiga.stream().anyMatch(n -> {
-                    double distanzaX = n.getLayoutX() - alleato.getLayoutX();
-                    return distanzaX > -30.0 && distanzaX < 150.0;
-                });
-
-                if (nemicoVicino) {
-                    alleato.impostaStato(AllyView.StatoAlleato.ATTACCO);
-
-                    long ultimoAttacco = ultimoAttaccoMap.getOrDefault(alleato, 0L);
-                    if (now - ultimoAttacco > 1_000_000_000L) {
-                        EnemyView target = nemiciSuRiga.get(0);
-                        int dannoAlleato = (alleato.getModelloAlleato() != null)
-                                ? alleato.getModelloAlleato().getDamage() : 25;
-
-                        boolean morto = target.subisciDanno(dannoAlleato);
-                        if (morto) {
-                            areaGiocoAnchor.getChildren().remove(target);
-                            nemiciAttivi.remove(target);
-                            System.out.println("⚔️ " + nomeUnita + " ha eliminato un nemico!");
-                        }
-                        ultimoAttaccoMap.put(alleato, now);
-                    }
-                } else {
-                    alleato.impostaStato(AllyView.StatoAlleato.IDLE);
-                }
-            }
-        }
-
-        aggiornaProiettili();
-    }
-
-    private void aggiornaProiettili() {
-        for (int i = proiettiliAttivi.size() - 1; i >= 0; i--) {
-            BulletView p = proiettiliAttivi.get(i);
-            p.muoviADestra();
-
-            for (int j = nemiciAttivi.size() - 1; j >= 0; j--) {
-                EnemyView n = nemiciAttivi.get(j);
-
-                if (p.getRiga() == n.getRigaAttuale() && p.getBoundsInParent().intersects(n.getBoundsInParent())) {
-                    boolean morto = n.subisciDanno(p.getDanno());
-
-                    areaGiocoAnchor.getChildren().remove(p);
-                    proiettiliAttivi.remove(i);
-
-                    if (morto) {
-                        areaGiocoAnchor.getChildren().remove(n);
-                        nemiciAttivi.remove(j);
-                        System.out.println("💀 Nemico eliminato!");
-                    }
-
-                    break;
-                }
-            }
-
-            // 🎯 RIMozione PROIETTILE PRIMA DEL BORDO MAPPA (Evita di espandere l'AnchorPane)
-            if (p.getLayoutX() > 1850.0) {
-                areaGiocoAnchor.getChildren().remove(p);
-                proiettiliAttivi.remove(i);
-            }
-        }
-    }
-    // --- GESTIONE ONDATE E SPAWN ---
-
+    // ==========================================
+    // 🕹️ GAME LOOP PRINCIPALE
+    // ==========================================
     public void avviaOndata() {
-        System.out.println("=== AVVIO ONDATA " + ondataAttuale + " ===");
-
-        if (gameLoop != null) {
-            gameLoop.stop();
-        }
+        if (gameLoop != null) gameLoop.stop();
 
         nemiciRimanentiOndata = 5 + (ondataAttuale - 1) * 3;
         ultimoSpawnTime = System.nanoTime();
@@ -459,14 +193,18 @@ public class GiocoController {
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                if (inPausa) return;
+
                 if (nemiciRimanentiOndata > 0 && (now - ultimoSpawnTime > 3_000_000_000L)) {
                     spawnaNemicoCasual();
                     ultimoSpawnTime = now;
                     nemiciRimanentiOndata--;
                 }
 
-                aggiornaPosizioneNemici();
-                aggiornaLogicaCombattimento(now);
+                aggiornaMovimentoNemiciESincronizzaModel();
+                aggiornaLogicaCombattimento();
+                aggiornaProiettili();
+                sincronizzaNemiciMorti();
 
                 if (nemiciRimanentiOndata == 0 && nemiciAttivi.isEmpty()) {
                     gameLoop.stop();
@@ -478,24 +216,214 @@ public class GiocoController {
         gameLoop.start();
     }
 
+    private void aggiornaMovimentoNemiciESincronizzaModel() {
+        long tempoAttuale = System.currentTimeMillis();
+
+        for (int i = nemiciAttivi.size() - 1; i >= 0; i--) {
+            EnemyView nemicoView = nemiciAttivi.get(i);
+            int riga = nemicoView.getRigaAttuale();
+
+            int colonnaVisiva = calcolaColonnaDaSprite(riga, nemicoView);
+
+            boolean bloccato = false;
+            Ally alleatoTarget = null;
+
+            if (model != null && colonnaVisiva >= 0 && colonnaVisiva < model.getColumns()) {
+                alleatoTarget = model.getMaskMatrix()[riga][colonnaVisiva].getAlly();
+                if (alleatoTarget != null) {
+                    bloccato = true;
+                }
+            }
+
+            if (bloccato && alleatoTarget != null) {
+                nemicoView.setStato(EnemyView.StatoNemico.ATTACCO);
+
+                if (tempoAttuale - nemicoView.getUltimoAttaccoTime() > 1500) {
+                    alleatoTarget.beDamaged(20);
+                    nemicoView.setUltimoAttaccoTime(tempoAttuale);
+
+                    if (alleatoTarget.isDead()) {
+                        model.getMaskMatrix()[riga][colonnaVisiva].setAlly(null);
+                        int r = riga, c = colonnaVisiva;
+                        alleatiInGioco.removeIf(a -> {
+                            if (a.getRiga() == r && a.getColonna() == c) {
+                                areaGiocoAnchor.getChildren().remove(a);
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+                }
+            } else {
+                int vecchiaCol = calcolaColonnaDaSprite(riga, nemicoView);
+                nemicoView.setStato(EnemyView.StatoNemico.CAMMINATA);
+                nemicoView.muoviASinistra();
+                int nuovaCol = calcolaColonnaDaSprite(riga, nemicoView);
+
+                if (vecchiaCol != nuovaCol && model != null) {
+                    if (vecchiaCol < model.getColumns() && nuovaCol < model.getColumns()) {
+                        var listaVecchia = model.getMaskMatrix()[riga][vecchiaCol].getEnemyList();
+                        if (!listaVecchia.isEmpty()) {
+                            Enemy e = listaVecchia.removeFirst();
+                            model.getMaskMatrix()[riga][nuovaCol].getEnemyList().add(e);
+                        }
+                    }
+                }
+            }
+
+            if (nemicoView.getLayoutX() < 300.0) {
+                gestisciGameOver();
+                return;
+            }
+        }
+    }
+
+    private int calcolaColonnaDaSprite(int riga, EnemyView nemico) {
+        double centroX = nemico.getLayoutX() + 100.0;
+
+        for (int c = 8; c >= 0; c--) {
+            Polygon poly = (Polygon) areaGiocoAnchor.lookup("#cell_" + riga + "_" + c);
+            if (poly != null && centroX >= poly.getLayoutX()) {
+                return c;
+            }
+        }
+        return 0;
+    }
+
+    private void aggiornaLogicaCombattimento() {
+        for (int i = alleatiInGioco.size() - 1; i >= 0; i--) {
+            AllyView alleatoVisivo = alleatiInGioco.get(i);
+            Ally modello = alleatoVisivo.getModelloAlleato();
+            if (modello == null) continue;
+
+            int riga = alleatoVisivo.getRiga();
+            int colonna = alleatoVisivo.getColonna();
+
+            if (modello instanceof Horseman) {
+                alleatoVisivo.impostaStato(AllyView.StatoAlleato.ATTACCO);
+
+                boolean haAvanzato = modello.doAction(this.model, riga, colonna);
+
+                if (haAvanzato) {
+                    int nuovaColonna = colonna + 1;
+
+                    if (nuovaColonna < model.getColumns()) {
+                        alleatoVisivo.setPosizioneGriglia(riga, nuovaColonna);
+
+                        Polygon polyTarget = (Polygon) areaGiocoAnchor.lookup("#cell_" + riga + "_" + nuovaColonna);
+                        if (polyTarget != null) {
+                            double centroX = (polyTarget.getPoints().get(0) + polyTarget.getPoints().get(4)) / 2;
+                            alleatoVisivo.setLayoutX(polyTarget.getLayoutX() + centroX - 100.0);
+                        }
+                    } else {
+                        areaGiocoAnchor.getChildren().remove(alleatoVisivo);
+                        alleatiInGioco.remove(i);
+                        continue;
+                    }
+                }
+                continue;
+            }
+
+            boolean nemicoNelRange = false;
+            for (int c = colonna; c <= colonna + modello.getRange() && c < model.getColumns(); c++) {
+                if (model.hasEnemyAt(riga, c)) {
+                    nemicoNelRange = true;
+                    break;
+                }
+            }
+
+            boolean haAttaccatoOra = modello.doAction(this.model, riga, colonna);
+
+            if (nemicoNelRange) {
+                alleatoVisivo.impostaStato(AllyView.StatoAlleato.ATTACCO);
+
+                if (haAttaccatoOra && !(modello instanceof Arciere) && !(modello instanceof Stregone)) {
+                    for (EnemyView nemico : nemiciAttivi) {
+                        if (nemico.getRigaAttuale() == riga) {
+                            int colNemico = calcolaColonnaDaSprite(riga, nemico);
+                            if (colNemico == colonna || colNemico == colonna + 1) {
+                                nemico.subisciDanno(modello.getDamage());
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                alleatoVisivo.impostaStato(AllyView.StatoAlleato.IDLE);
+            }
+        }
+    }
+
+    private void aggiornaProiettili() {
+        for (int i = proiettiliAttivi.size() - 1; i >= 0; i--) {
+            BulletView proiettile = proiettiliAttivi.get(i);
+            proiettile.muoviADestra();
+
+            boolean colpito = false;
+
+            for (EnemyView nemico : nemiciAttivi) {
+                if (nemico.getRigaAttuale() == proiettile.getRiga()) {
+                    if (proiettile.getBoundsInParent().intersects(nemico.getBoundsInParent())) {
+                        nemico.subisciDanno(proiettile.getDanno());
+                        colpito = true;
+                        break;
+                    }
+                }
+            }
+
+            if (colpito || proiettile.getLayoutX() > 1850.0) {
+                areaGiocoAnchor.getChildren().remove(proiettile);
+                proiettiliAttivi.remove(i);
+            }
+        }
+    }
+
+    private void sincronizzaNemiciMorti() {
+        for (int j = nemiciAttivi.size() - 1; j >= 0; j--) {
+            EnemyView nemicoView = nemiciAttivi.get(j);
+
+            if (nemicoView.isDead()) {
+                int riga = nemicoView.getRigaAttuale();
+                int col = calcolaColonnaDaSprite(riga, nemicoView);
+
+                if (model != null && col >= 0 && col < model.getColumns()) {
+                    var enemyList = model.getMaskMatrix()[riga][col].getEnemyList();
+                    if (!enemyList.isEmpty()) {
+                        enemyList.removeFirst();
+                    }
+                }
+
+                areaGiocoAnchor.getChildren().remove(nemicoView);
+                nemiciAttivi.remove(j);
+
+                if (model != null) {
+                    model.incrementaNemiciUccisi();
+                }
+            }
+        }
+    }
+
     private void spawnaNemicoCasual() {
         int rigaCasuale = ThreadLocalRandom.current().nextInt(0, 5);
         int colonnaSpawn = 8;
 
-        String idPoligono = "cell_" + rigaCasuale + "_" + colonnaSpawn;
-        Polygon poligonoTarget = (Polygon) areaGiocoAnchor.lookup("#" + idPoligono);
+        Polygon poligonoTarget = (Polygon) areaGiocoAnchor.lookup("#cell_" + rigaCasuale + "_" + colonnaSpawn);
 
         if (poligonoTarget != null) {
-            EnemyView nemico = new EnemyView("Skeleton_Walk", rigaCasuale);
+            String tipoNemico = "Skeleton_Walk";
+            Enemy modelloNemico = creaIstanzaNemico(tipoNemico, colonnaSpawn);
+
+            if (model != null && modelloNemico != null) {
+                model.getMaskMatrix()[rigaCasuale][colonnaSpawn].getEnemyList().add(modelloNemico);
+            }
+
+            EnemyView nemico = new EnemyView(tipoNemico, rigaCasuale);
 
             double centroX = (poligonoTarget.getPoints().get(0) + poligonoTarget.getPoints().get(4)) / 2;
             double centroY = (poligonoTarget.getPoints().get(1) + poligonoTarget.getPoints().get(5)) / 2;
 
-            double offsetX = 45.0;
-            double offsetY = 100.0;
-
-            nemico.setLayoutX(poligonoTarget.getLayoutX() + centroX - offsetX);
-            nemico.setLayoutY(poligonoTarget.getLayoutY() + centroY - offsetY);
+            nemico.setLayoutX(poligonoTarget.getLayoutX() + centroX - 45.0);
+            nemico.setLayoutY(poligonoTarget.getLayoutY() + centroY - 100.0);
 
             switch(rigaCasuale) {
                 case 0 -> { nemico.setScaleX(0.75); nemico.setScaleY(0.75); }
@@ -507,220 +435,191 @@ public class GiocoController {
 
             areaGiocoAnchor.getChildren().add(nemico);
             nemiciAttivi.add(nemico);
-
-            System.out.println("Nemico spawnato in riga " + rigaCasuale);
         }
     }
 
-    private void aggiornaPosizioneNemici() {
-        long tempoAttuale = System.nanoTime();
+    private Enemy creaIstanzaNemico(String tipo, int colonna) {
+        return switch (tipo) {
+            case "Skeleton_Walk", "Scheletro" -> new Enemy(100, 20, 1, colonna);
+            case "Zombie" -> new Enemy(200, 15, 1, colonna);
+            case "Orco" -> new Enemy(350, 40, 1, colonna);
+            default -> new Enemy(100, 20, 1, colonna);
+        };
+    }
 
-        for (int i = nemiciAttivi.size() - 1; i >= 0; i--) {
-            EnemyView nemico = nemiciAttivi.get(i);
-            boolean bloccatoDaAlleato = false;
+    @FXML
+    private void gestisciClickCasella(MouseEvent event) {
+        if (inPausa || (popupSceltaAlleato != null && popupSceltaAlleato.isVisible())) return;
 
-            for (int j = alleatiInGioco.size() - 1; j >= 0; j--) {
-                AllyView alleatoVisivo = alleatiInGioco.get(j);
+        Polygon poligono = (Polygon) event.getSource();
+        String[] parti = poligono.getId().split("_");
+        int riga = Integer.parseInt(parti[1]);
+        int colonna = Integer.parseInt(parti[2]);
 
-                if (alleatoVisivo.getRiga() == nemico.getRigaAttuale()) {
-                    double distanzaX = nemico.getLayoutX() - alleatoVisivo.getLayoutX();
+        if (costruttoreAlleatoSelezionato == null || !model.cellaLibera(riga, colonna)) return;
+        if (model.getMonete() < costoAlleatoSelezionato) return;
 
-                    if (distanzaX > -20.0 && distanzaX < 80.0) {
-                        bloccatoDaAlleato = true;
+        Ally nuovoAlleatoLogico = costruttoreAlleatoSelezionato.get();
 
-                        if (tempoAttuale - nemico.getUltimoAttaccoTime() > 1_200_000_000L) {
+        if (model.sottraiMonete(costoAlleatoSelezionato)) {
+            model.getMaskMatrix()[riga][colonna].setAlly(nuovoAlleatoLogico);
+            testoMonete.setText("x" + model.getMonete());
+            model.incrementaAlleatiPiazzati();
 
-                            if (alleatoVisivo.getModelloAlleato() != null) {
-                                // Subisce danno usando beDamaged e isDead di Entity
-                                Ally modello = alleatoVisivo.getModelloAlleato();
-                                modello.beDamaged(20);
+            AllyView alleatoVisivo = new AllyView(nomeAlleatoSelezionato.toLowerCase());
+            alleatoVisivo.setPosizioneGriglia(riga, colonna);
+            alleatoVisivo.setModelloAlleato(nuovoAlleatoLogico);
 
-                                alleatoVisivo.setOpacity(0.5);
-                                javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(150));
-                                pause.setOnFinished(e -> alleatoVisivo.setOpacity(1.0));
-                                pause.play();
+            impostaListenerProiettile(alleatoVisivo);
 
-                                if (modello.isDead()) {
-                                    System.out.println("💀 L'alleato in [" + alleatoVisivo.getRiga() + "][" + alleatoVisivo.getColonna() + "] è stato distrutto!");
+            double centroX = (poligono.getPoints().get(0) + poligono.getPoints().get(4)) / 2;
+            double centroY = (poligono.getPoints().get(1) + poligono.getPoints().get(5)) / 2;
 
-                                    int riga = alleatoVisivo.getRiga();
-                                    int colonna = alleatoVisivo.getColonna();
+            alleatoVisivo.setLayoutX(poligono.getLayoutX() + centroX - 100.0);
+            alleatoVisivo.setLayoutY(poligono.getLayoutY() + centroY - 100.0);
 
-                                    // Libera la casella nel Model
-                                    if (model != null && model.getMaskMatrix() != null) {
-                                        model.getMaskMatrix()[riga][colonna].setAlly(null);
-                                    }
-
-                                    areaGiocoAnchor.getChildren().remove(alleatoVisivo);
-                                    alleatiInGioco.remove(j);
-                                }
-                            }
-
-                            nemico.setUltimoAttaccoTime(tempoAttuale);
-                        }
-                        break;
-                    }
-                }
+            switch(riga) {
+                case 0 -> { alleatoVisivo.setScaleX(0.75); alleatoVisivo.setScaleY(0.75); }
+                case 1 -> { alleatoVisivo.setScaleX(0.83); alleatoVisivo.setScaleY(0.83); }
+                case 2 -> { alleatoVisivo.setScaleX(0.92); alleatoVisivo.setScaleY(0.92); }
+                case 3 -> { alleatoVisivo.setScaleX(1.00); alleatoVisivo.setScaleY(1.00); }
+                case 4 -> { alleatoVisivo.setScaleX(1.08); alleatoVisivo.setScaleY(1.08); }
             }
 
-            if (!bloccatoDaAlleato) {
-                nemico.muoviASinistra();
-            }
-
-            if (nemico.getLayoutX() < 350) {
-                System.out.println("GAME OVER: I nemici hanno superato le difese!");
-                if (gameLoop != null) gameLoop.stop();
-            }
+            areaGiocoAnchor.getChildren().add(alleatoVisivo);
+            alleatiInGioco.add(alleatoVisivo);
         }
+    }
+
+    private void impostaListenerProiettile(AllyView alleatoVisivo) {
+        Ally modello = alleatoVisivo.getModelloAlleato();
+
+        if (modello instanceof Arciere || modello instanceof Stregone) {
+            alleatoVisivo.setOnAttackReleaseListener(() -> {
+                long nemiciSuRiga = nemiciAttivi.stream()
+                        .filter(n -> n.getRigaAttuale() == alleatoVisivo.getRiga())
+                        .count();
+
+                if (nemiciSuRiga > 0) {
+                    double startX = alleatoVisivo.getLayoutX() + 120.0;
+                    double startY = alleatoVisivo.getLayoutY() + 75.0;
+
+                    BulletView freccia = new BulletView(
+                            alleatoVisivo.getNomeAlleato().toLowerCase(),
+                            startX,
+                            startY,
+                            alleatoVisivo.getRiga(),
+                            modello.getDamage()
+                    );
+
+                    proiettiliAttivi.add(freccia);
+                    areaGiocoAnchor.getChildren().add(freccia);
+                    freccia.toFront();
+                }
+            });
+        } else {
+            alleatoVisivo.setOnAttackReleaseListener(null);
+        }
+    }
+
+    // ==========================================
+    // 🎛️ PAUSA, DRAFTING E UTILITIES
+    // ==========================================
+    @FXML
+    private void gestisciClickSlotBarra(javafx.event.ActionEvent event) {
+        javafx.scene.control.Button btn = (javafx.scene.control.Button) event.getSource();
+        int indexSlot = Integer.parseInt(btn.getId().split("_")[1]);
+
+        if (indexSlot < alleatiNegliSlot.size() && alleatiNegliSlot.get(indexSlot) != null) {
+            Supplier<Ally> costruttore = alleatiNegliSlot.get(indexSlot);
+            Ally esempio = costruttore.get();
+            selezionaUnita(esempio.getClass().getSimpleName(), esempio.getCost(), costruttore);
+        }
+    }
+
+    public void selezionaUnita(String nome, int costo, Supplier<Ally> costruttore) {
+        this.nomeAlleatoSelezionato = nome;
+        this.costoAlleatoSelezionato = costo;
+        this.costruttoreAlleatoSelezionato = costruttore;
+    }
+
+    public void togglePausa() {
+        if (inPausa) riprendiGioco(); else apriPausa();
+    }
+
+    @FXML
+    public void apriPausa() {
+        inPausa = true;
+        for (AllyView a : alleatiInGioco) a.pausaAnimazione();
+        for (EnemyView n : nemiciAttivi) n.pausaAnimazione();
+        if (menuPausa != null) menuPausa.setVisible(true);
+    }
+
+    @FXML
+    public void riprendiGioco() {
+        inPausa = false;
+        if (menuPausa != null) menuPausa.setVisible(false);
+        for (AllyView a : alleatiInGioco) a.riprendiAnimazione();
+        for (EnemyView n : nemiciAttivi) n.riprendiAnimazione();
     }
 
     private void completaOndata() {
-        System.out.println("🎉 ONDATA " + ondataAttuale + " COMPLETATA!");
-
-        // 1. Fermiamo il game loop se attivo
-        if (gameLoop != null) {
-            gameLoop.stop();
-        }
-
-        // 2. Puliamo le frecce rimaste in volo
-        for (BulletView p : proiettiliAttivi) {
-            areaGiocoAnchor.getChildren().remove(p);
-        }
+        for (BulletView p : proiettiliAttivi) areaGiocoAnchor.getChildren().remove(p);
         proiettiliAttivi.clear();
-
-        // 3. Riportiamo gli alleati in posizione IDLE
-        for (AllyView alleato : alleatiInGioco) {
-            alleato.impostaStato(AllyView.StatoAlleato.IDLE);
-        }
+        for (AllyView alleato : alleatiInGioco) alleato.impostaStato(AllyView.StatoAlleato.IDLE);
 
         if (ondataAttuale < TOTALE_ONDATE) {
-            // Regalo monete
-            if (model != null) {
-                model.addMonete(50);
-                if (testoMonete != null) {
-                    testoMonete.setText("MONETE: " + model.getMonete());
-                }
-            }
 
-            // MOSTRIAAMO IL POPUP: il gioco si "congela" finché il giocatore non recluta!
+            model.addMonete(moneteDefault * ondataAttuale);
+            testoMonete.setText("x" + model.getMonete());
             mostraPopupSceltaAlleato();
-
-        } else {
-            System.out.println("🏆 VITTORIA FINALE! Hai completato tutte le 10 ondate!");
         }
     }
 
-    // --- GESTIONE DEGLI SLOT BARRA E POPUP ---
-  // Registra chi c'è nei 6 slot
-
-    private Ally opzione1, opzione2; // Le due opzioni estratte casualmente
-    private int slotDaSostituireIndex = -1; // Gestisce la sostituzione se pieno
-
-    // Registro di tutti i 10 tipi di alleati con i loro costruttori
-    private final List<Supplier<Ally>> poolTuttiAlleati = List.of(
-            Alabardiere::new, Arciere::new, Cavaliere::new, Horseman::new,
-            Prete::new, Sacerdote::new, Soldato::new, Spadaccino::new,
-            Stregone::new, Templare::new
-    );
-
-    /**
-     * Genera il pop-up con 2 carte casuali
-     */
     public void mostraPopupSceltaAlleato() {
-        // 1. Raccogliamo i nomi dei personaggi attualmente posseduti negli slot
-        Set<String> nomiPosseduti = new HashSet<>();
-        for (Supplier<Ally> supplier : alleatiNegliSlot) {
-            if (supplier != null) {
-                nomiPosseduti.add(supplier.get().getClass().getSimpleName());
-            }
+        Set<String> posseduti = new HashSet<>();
+        for (Supplier<Ally> s : alleatiNegliSlot) {
+            if (s != null) posseduti.add(s.get().getClass().getSimpleName());
         }
 
-        // 2. Filtriamo il pool mantenendo solo gli alleati NON posseduti
-        List<Supplier<Ally>> poolDisponibili = poolTuttiAlleati.stream()
-                .filter(supplier -> !nomiPosseduti.contains(supplier.get().getClass().getSimpleName()))
+        List<Supplier<Ally>> disponibili = poolTuttiAlleati.stream()
+                .filter(s -> !posseduti.contains(s.get().getClass().getSimpleName()))
                 .toList();
 
-        // 3. Estrazione in base alla disponibilità residua
-        if (poolDisponibili.size() >= 2) {
-            int idx1 = ThreadLocalRandom.current().nextInt(poolDisponibili.size());
+        if (disponibili.size() >= 2) {
+            int idx1 = ThreadLocalRandom.current().nextInt(disponibili.size());
             int idx2;
-            do {
-                idx2 = ThreadLocalRandom.current().nextInt(poolDisponibili.size());
-            } while (idx1 == idx2);
+            do { idx2 = ThreadLocalRandom.current().nextInt(disponibili.size()); } while (idx1 == idx2);
 
-            opzione1 = poolDisponibili.get(idx1).get();
-            opzione2 = poolDisponibili.get(idx2).get();
+            opzione1 = disponibili.get(idx1).get();
+            opzione2 = disponibili.get(idx2).get();
 
             impostaDatiCarta(opzione1, imgCard1, nomeCard1, statsCard1);
             impostaDatiCarta(opzione2, imgCard2, nomeCard2, statsCard2);
 
             popupSceltaAlleato.setVisible(true);
-            popupSceltaAlleato.toFront();
-
-        } else if (poolDisponibili.size() == 1) {
-            // Se rimanesse solo 1 personaggio non posseduto
-            opzione1 = poolDisponibili.get(0).get();
-            impostaDatiCarta(opzione1, imgCard1, nomeCard1, statsCard1);
-
-            // Nascondiamo o disabilitiamo la seconda carta se non ce ne sono altre disponibili
-            card2Container.setVisible(false);
-            popupSceltaAlleato.setVisible(true);
-            popupSceltaAlleato.toFront();
         } else {
-            System.out.println("Possiedi già tutti gli alleati disponibili!");
-            // Salta direttamente alla prossima ondata se li possiedi già tutti
             ondataAttuale++;
             avviaOndata();
         }
     }
 
     private void impostaDatiCarta(Ally a, ImageView img, Label nome, Label stats) {
-        String nomeClasse = a.getClass().getSimpleName(); // Es: "Arciere", "Cavaliere"
+        String nomeClasse = a.getClass().getSimpleName();
         nome.setText(nomeClasse.toUpperCase());
-
-        // CARICAMENTO IMMAGINE CARTA (es. /images/ArciereCard.png)
         try {
             var stream = getClass().getResourceAsStream("/images/" + nomeClasse + "Card.png");
-            if (stream != null) {
-                img.setImage(new Image(stream));
-            } else {
-                System.err.println("Carta non trovata: " + nomeClasse + "Card.png");
-            }
-        } catch (Exception e) {
-            System.err.println("Errore caricamento carta per: " + nomeClasse);
-        }
+            if (stream != null) img.setImage(new Image(stream));
+        } catch (Exception e) {}
 
-        // Statistiche
-        stats.setText("HP: " + a.getHp() + "\n" +
-                "Danno: " + a.getDamage() + "\n" +
-                "Costo: " + a.getCost() + " Oro\n" +
-                "Gittata: " + a.getRange());
+        stats.setText("HP: " + a.getHp() + "\nDanno: " + a.getDamage() + "\nCosto: " + a.getCost() + " Oro");
     }
 
-    @FXML
-    private void scegliCarta1() {
-        assegnaAlleatoA_Slot(opzione1);
-        popupSceltaAlleato.setVisible(false);
-
-        // Passiamo alla nuova ondata e la avviamo!
-        ondataAttuale++;
-        avviaOndata();
-    }
-
-    @FXML
-    private void scegliCarta2() {
-        assegnaAlleatoA_Slot(opzione2);
-        popupSceltaAlleato.setVisible(false);
-
-        // Passiamo alla nuova ondata e la avviamo!
-        ondataAttuale++;
-        avviaOndata();
-    }
+    @FXML private void scegliCarta1() { assegnaAlleatoA_Slot(opzione1); popupSceltaAlleato.setVisible(false); ondataAttuale++; avviaOndata(); }
+    @FXML private void scegliCarta2() { assegnaAlleatoA_Slot(opzione2); popupSceltaAlleato.setVisible(false); ondataAttuale++; avviaOndata(); }
 
     private void assegnaAlleatoA_Slot(Ally alleatoScelto) {
         String nomeClasse = alleatoScelto.getClass().getSimpleName();
-
-        // Trova il primo slot libero (da 0 a 5)
         int slotLibero = -1;
         for (int i = 0; i < 6; i++) {
             if (i >= alleatiNegliSlot.size() || alleatiNegliSlot.get(i) == null) {
@@ -728,26 +627,10 @@ public class GiocoController {
                 break;
             }
         }
-
         if (slotLibero != -1) {
-            // C'è uno slot libero (es. lo Slot 2 alla fine dell'Ondata 1)
-            if (slotLibero < alleatiNegliSlot.size()) {
-                alleatiNegliSlot.set(slotLibero, () -> creoIstanza(nomeClasse));
-            } else {
-                alleatiNegliSlot.add(() -> creoIstanza(nomeClasse));
-            }
+            if (slotLibero < alleatiNegliSlot.size()) alleatiNegliSlot.set(slotLibero, () -> creoIstanza(nomeClasse));
+            else alleatiNegliSlot.add(() -> creoIstanza(nomeClasse));
             aggiornaIconaSlot(slotLibero, nomeClasse);
-            System.out.println("Nuovo alleato " + nomeClasse + " aggiunto nello Slot " + (slotLibero + 1));
-        } else {
-            // Tutti e 6 gli slot sono pieni -> Sostituzione!
-            // Se c'è uno slot selezionato usiamo quello, altrimenti sostituiamo lo slot 0 di default
-            int slotTarget = (slotDaSostituireIndex != -1) ? slotDaSostituireIndex : 0;
-
-            alleatiNegliSlot.set(slotTarget, () -> creoIstanza(nomeClasse));
-            aggiornaIconaSlot(slotTarget, nomeClasse);
-
-            System.out.println("Slot pieni! " + nomeClasse + " ha rimpiazzato l'alleato nello Slot " + (slotTarget + 1));
-            slotDaSostituireIndex = -1; // Resetta il selettore
         }
     }
 
@@ -756,32 +639,19 @@ public class GiocoController {
             ImageView imgView = immaginiSlotBarra.get(indexSlot);
             if (imgView != null) {
                 try {
-                    // USA IL NOME ESATTO (es. "ArciereCard.png", "CavaliereCard.png") SENZA toLowerCase()
-                    String percorsoCarta = "/images/" + nomeClasse + "Card.png";
-                    var stream = getClass().getResourceAsStream(percorsoCarta);
-
+                    var stream = getClass().getResourceAsStream("/images/" + nomeClasse + "Card.png");
                     if (stream != null) {
-                        Image cartaImage = new Image(stream);
-                        imgView.setImage(cartaImage);
-
-                        // ADATTAMENTO DIMENSIONI SLOT (100x100 o dimensioni del tuo pulsante)
+                        imgView.setImage(new Image(stream));
                         imgView.setFitWidth(90);
                         imgView.setFitHeight(90);
                         imgView.setPreserveRatio(true);
-
-                        // Disattiva il ritaglio per non visualizzare lo sprite intero
                         imgView.setViewport(null);
-                    } else {
-                        System.err.println("⚠️ Immagine carta non trovata nel percorso: " + percorsoCarta);
                     }
-                } catch (Exception e) {
-                    System.err.println("Errore caricamento icona slot: " + e.getMessage());
-                }
+                } catch (Exception e) {}
             }
         }
     }
 
-    // Helper aggiornato con i 10 alleati
     private Ally creoIstanza(String nome) {
         return switch (nome) {
             case "Arciere" -> new Arciere();
@@ -796,5 +666,284 @@ public class GiocoController {
             case "Templare" -> new Templare();
             default -> new Arciere();
         };
+    }
+
+    private void gestisciGameOver() {
+        dbManager.eliminaSlot(this.slotAttuale);
+
+        if (screenGameOver != null) {
+            lblStatOndata.setText("Ondata Massima Raggiunta: " + ondataAttuale);
+            lblStatNemici.setText("Nemici Sconfitti: " + model.getNemiciUccisi());
+            lblStatAlleati.setText("Alleati Reclutati: " + model.getAlleatiPiazzatiTotali());
+            lblStatMonete.setText("Oro Speso nella Difesa: " + model.getMoneteSpeseTotali());
+
+            screenGameOver.setVisible(true);
+            screenGameOver.toFront();
+        }
+    }
+
+    // --- METODI NAVIGATION PANNELLI ---
+
+    @FXML
+    private void apriSettingsPausa() {
+        if (menuPausa != null) menuPausa.setVisible(false);
+        if (panelSettingsPausa != null) panelSettingsPausa.setVisible(true);
+    }
+
+    @FXML
+    private void chiudiSettingsPausa() {
+        if (panelSettingsPausa != null) panelSettingsPausa.setVisible(false);
+        if (menuPausa != null) menuPausa.setVisible(true);
+    }
+
+    @FXML private void esciSenzaSalvare() {
+        if (gameLoop != null) gameLoop.stop();
+        try {
+            HelloApplication app = new HelloApplication();
+            app.start((javafx.stage.Stage) areaGiocoAnchor.getScene().getWindow());
+        } catch (Exception e) {}
+    }
+    @FXML private void ritornaAlMenuGameOver() { esciSenzaSalvare(); }
+
+    public void setModel(MapMask model) {
+        this.model = model;
+        if (testoMonete != null && model != null) {
+            testoMonete.setText("x" + model.getMonete());
+        }
+    }
+
+    public void setSlotAttuale(int slotId) {
+        this.slotAttuale = slotId;
+    }
+
+    public void caricaStatoDaDB(GameStateDTO dto) {
+        if (dto == null) return;
+
+        this.slotAttuale = dto.slotId;
+        this.ondataAttuale = dto.ondataAttuale;
+        if (this.model != null) {
+            this.model.ripristinaDaDTO(dto);
+        }
+
+        if (testoMonete != null && model != null) {
+            testoMonete.setText("MONETE: " + model.getMonete());
+        }
+
+        for (AllyView a : alleatiInGioco) areaGiocoAnchor.getChildren().remove(a);
+        for (EnemyView n : nemiciAttivi) areaGiocoAnchor.getChildren().remove(n);
+        alleatiInGioco.clear();
+        nemiciAttivi.clear();
+        proiettiliAttivi.clear();
+
+        for (GameStateDTO.CellDataDTO cella : dto.griglia) {
+            String nomeClasse = cella.tipoAlleato;
+            Ally alleatoLogico = creoIstanza(nomeClasse);
+
+            if (model != null) {
+                model.getMaskMatrix()[cella.riga][cella.colonna].setAlly(alleatoLogico);
+            }
+
+            Polygon poligono = (Polygon) areaGiocoAnchor.lookup("#cell_" + cella.riga + "_" + cella.colonna);
+            if (poligono != null) {
+                AllyView alleatoVisivo = new AllyView(nomeClasse.toLowerCase());
+                alleatoVisivo.setPosizioneGriglia(cella.riga, cella.colonna);
+                alleatoVisivo.setModelloAlleato(alleatoLogico);
+                impostaListenerProiettile(alleatoVisivo);
+
+                double centroX = (poligono.getPoints().get(0) + poligono.getPoints().get(4)) / 2;
+                double centroY = (poligono.getPoints().get(1) + poligono.getPoints().get(5)) / 2;
+
+                alleatoVisivo.setLayoutX(poligono.getLayoutX() + centroX - 100.0);
+                alleatoVisivo.setLayoutY(poligono.getLayoutY() + centroY - 100.0);
+
+                switch (cella.riga) {
+                    case 0 -> { alleatoVisivo.setScaleX(0.75); alleatoVisivo.setScaleY(0.75); }
+                    case 1 -> { alleatoVisivo.setScaleX(0.83); alleatoVisivo.setScaleY(0.83); }
+                    case 2 -> { alleatoVisivo.setScaleX(0.92); alleatoVisivo.setScaleY(0.92); }
+                    case 3 -> { alleatoVisivo.setScaleX(1.00); alleatoVisivo.setScaleY(1.00); }
+                    case 4 -> { alleatoVisivo.setScaleX(1.08); alleatoVisivo.setScaleY(1.08); }
+                }
+
+                areaGiocoAnchor.getChildren().add(alleatoVisivo);
+                alleatiInGioco.add(alleatoVisivo);
+            }
+        }
+
+        for (GameStateDTO.EnemyDataDTO nDto : dto.nemici) {
+            EnemyView nemicoView = new EnemyView(nDto.tipoNemico, nDto.riga);
+            nemicoView.setLayoutX(nDto.posX);
+            nemicoView.setLayoutY(nDto.posY);
+            nemicoView.setHp(nDto.hpRimanenti);
+
+            switch (nDto.riga) {
+                case 0 -> { nemicoView.setScaleX(0.75); nemicoView.setScaleY(0.75); }
+                case 1 -> { nemicoView.setScaleX(0.83); nemicoView.setScaleY(0.83); }
+                case 2 -> { nemicoView.setScaleX(0.92); nemicoView.setScaleY(0.92); }
+                case 3 -> { nemicoView.setScaleX(1.00); nemicoView.setScaleY(1.00); }
+                case 4 -> { nemicoView.setScaleX(1.08); nemicoView.setScaleY(1.08); }
+            }
+
+            int colonna = calcolaColonnaDaSprite(nDto.riga, nemicoView);
+            Enemy modelloNemico = creaIstanzaNemico(nDto.tipoNemico, colonna);
+            if (modelloNemico != null && model != null) {
+                model.getMaskMatrix()[nDto.riga][colonna].getEnemyList().add(modelloNemico);
+            }
+
+            areaGiocoAnchor.getChildren().add(nemicoView);
+            nemiciAttivi.add(nemicoView);
+        }
+    }
+
+    @FXML
+    private void salvaPartita(javafx.event.ActionEvent event) {
+        if (model == null) return;
+
+        GameStateDTO dto = model.creaDTO(this.ondataAttuale);
+        dto.slotId = this.slotAttuale;
+
+        java.time.LocalDateTime ora = java.time.LocalDateTime.now();
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        dto.dataSalvataggio = ora.format(fmt);
+
+        for (EnemyView nemicoView : nemiciAttivi) {
+            GameStateDTO.EnemyDataDTO eDto = new GameStateDTO.EnemyDataDTO();
+            eDto.riga = nemicoView.getRigaAttuale();
+            eDto.tipoNemico = nemicoView.getTipoNemico();
+            eDto.posX = nemicoView.getLayoutX();
+            eDto.posY = nemicoView.getLayoutY();
+            eDto.hpRimanenti = nemicoView.getHpAttuali();
+            dto.nemici.add(eDto);
+        }
+
+        boolean successo = dbManager.salvaPartita(dto);
+
+        if (successo) {
+            if (gameLoop != null) gameLoop.stop();
+
+            try {
+                java.net.URL resource = getClass().getResource("/it/unical/uid/progettoesameuid/MenuPrincipale.fxml");
+                if (resource == null) resource = getClass().getResource("/MenuPrincipale.fxml");
+
+                FXMLLoader loader = new FXMLLoader(resource);
+                Parent root = loader.load();
+
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.getScene().setRoot(root);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void selezionaSlotEAvvia(ActionEvent event, int slotId) {
+        GameStateDTO salvataggio = dbManager.caricaPartita(slotId);
+
+        try {
+            URL resource = getClass().getResource("/it/unical/uid/progettoesameuid/MappaGioco.fxml");
+            if (resource == null) resource = getClass().getResource("/MappaGioco.fxml");
+
+            FXMLLoader loader = new FXMLLoader(resource);
+            Parent root = loader.load();
+
+            GiocoController giocoController = loader.getController();
+
+            if (salvataggio != null) {
+                dbManager.eliminaSlot(slotId);
+
+                MapMask model = new MapMask();
+                giocoController.setModel(model);
+                giocoController.setSlotAttuale(slotId);
+            } else {
+                MapMask model = new MapMask();
+                giocoController.setModel(model);
+                giocoController.setSlotAttuale(slotId);
+            }
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.getScene().setRoot(root);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void cancellaSalvataggioSlot(int slotId) {
+        boolean successo = dbManager.eliminaSlot(slotId);
+        if (successo) {
+            aggiornaTestiSlotSalvataggio();
+        }
+    }
+
+    private void aggiornaTestiSlotSalvataggio() {
+        aggiornaPulsanteSave(btnSaveSlot1, 1);
+        aggiornaPulsanteSave(btnSaveSlot2, 2);
+        aggiornaPulsanteSave(btnSaveSlot3, 3);
+    }
+
+    private void aggiornaPulsanteSave(Button btn, int slotId) {
+        if (btn == null) return;
+        GameStateDTO dto = dbManager.caricaPartita(slotId);
+        if (dto != null) {
+            String data = dto.dataSalvataggio != null ? dto.dataSalvataggio : "";
+            btn.setText("SLOT " + slotId + " - Ondata " + dto.ondataAttuale + " (" + data + ") [SOVRASCRIVI]");
+        } else {
+            btn.setText("SLOT " + slotId + " - VUOTO (Salva qui)");
+        }
+    }
+
+    @FXML
+    private void confermaSovrascrittura(javafx.event.ActionEvent event) {
+        eseguiSalvataggioEdEsci(1, event);
+    }
+
+    @FXML private void salvaSuSlot1(javafx.event.ActionEvent event) { eseguiSalvataggioEdEsci(1, event); }
+    @FXML private void salvaSuSlot2(javafx.event.ActionEvent event) { eseguiSalvataggioEdEsci(2, event); }
+    @FXML private void salvaSuSlot3(javafx.event.ActionEvent event) { eseguiSalvataggioEdEsci(3, event); }
+
+    @FXML
+    private void chiudiPanelSalvataggio() {
+        if (panelSelezionaSlotSalvataggio != null) {
+            panelSelezionaSlotSalvataggio.setVisible(false);
+        }
+    }
+
+    private void eseguiSalvataggioEdEsci(int targetSlot, javafx.event.ActionEvent event) {
+        GameStateDTO dto = model.creaDTO(this.ondataAttuale);
+        dto.slotId = targetSlot;
+
+        java.time.LocalDateTime ora = java.time.LocalDateTime.now();
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        dto.dataSalvataggio = ora.format(fmt);
+
+        for (EnemyView nemicoView : nemiciAttivi) {
+            GameStateDTO.EnemyDataDTO eDto = new GameStateDTO.EnemyDataDTO();
+            eDto.riga = nemicoView.getRigaAttuale();
+            eDto.tipoNemico = nemicoView.getTipoNemico();
+            eDto.posX = nemicoView.getLayoutX();
+            eDto.posY = nemicoView.getLayoutY();
+            eDto.hpRimanenti = nemicoView.getHpAttuali();
+            dto.nemici.add(eDto);
+        }
+
+        boolean successo = dbManager.salvaPartita(dto);
+
+        if (successo) {
+            if (gameLoop != null) gameLoop.stop();
+
+            try {
+                java.net.URL resource = getClass().getResource("/it/unical/uid/progettoesameuid/MenuPrincipale.fxml");
+                if (resource == null) resource = getClass().getResource("/MenuPrincipale.fxml");
+
+                FXMLLoader loader = new FXMLLoader(resource);
+                Parent root = loader.load();
+
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.getScene().setRoot(root);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -8,15 +8,15 @@ public class Templare extends Ally {
     }
 
     @Override
-    public void doAction(MapMask map, int row, int col) {
-
+    public boolean doAction(MapMask map, int row, int col) {
         if (canAttack() && map.hasEnemyAt(row, col + 1)) {
             Enemy bersaglio = map.getMaskMatrix()[row][col + 1].getEnemyList().getFirst();
             bersaglio.beDamaged(this.damage);
 
-            // Cura se stesso
-            this.hp = Math.min(this.maxHp, this.hp + 10); // Cura di 15 HP a colpo
+            this.hp = Math.min(this.maxHp, this.hp + 10);
             resetCooldown();
+            return true; // 🎯 Attacco e cura eseguiti
         }
+        return false;
     }
 }

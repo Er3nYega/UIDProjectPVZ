@@ -2,11 +2,15 @@ package it.unical.uid.progettoesameuid.model;
 
 public class MapMask {
     public Cell[][] maskMatrix;
-    private final int ROWS = 9;
-    private final int COLUMNS = 9; // Corretto il nome della variabile
+    private final int ROWS = 5;    // 🎯 Corretto: la mappa ha 5 righe (0..4)
+    private final int COLUMNS = 9; // 9 colonne (0..8)
 
     // Monete per gli acquisti
-    private int monete = 10000000;
+    private int monete = 1000; // Valore iniziale di gioco di prova (es. 300)
+
+    private int nemiciUccisi = 0;
+    private int moneteSpeseTotali = 0;
+    private int alleatiPiazzatiTotali = 0;
 
     public MapMask() {
         maskMatrix = new Cell[ROWS][COLUMNS];
@@ -17,71 +21,20 @@ public class MapMask {
         }
     }
 
-    public void onGame() {
-        // FASE 1: Fai agire tutti gli Alleati (es. l'Arciere che cerca nemici sulla riga)
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLUMNS; j++) {
-                Cell currentCell = maskMatrix[i][j];
-                if (currentCell.hasAlly()) {
-                    currentCell.getAlly().doAction(this, i, j);
-                }
-            }
-        }
+    // --- METODI DI UTILITÀ PER IL GAMEPLAY ---
 
-        // FASE 2: Fai agire i Nemici e gestisci i combattimenti ravvicinati
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLUMNS; j++) {
-                Cell currentCell = maskMatrix[i][j];
-
-                if (currentCell.hasEnemy()) {
-                    boolean battle = false;
-                    Ally allyToAttack = null;
-
-                    // Controlliamo se c'è un alleato da attaccare nella cella corrente o in quella precedente
-                    if (currentCell.hasAlly()) {
-                        battle = true;
-                        allyToAttack = currentCell.getAlly();
-                    } else if (j > 0 && maskMatrix[i][j - 1].hasAlly()) {
-                        battle = true;
-                        allyToAttack = maskMatrix[i][j - 1].getAlly();
-                    }
-
-                    // Iteriamo su una copia o lista dei nemici presenti nella cella
-                    for (Enemy e : currentCell.getEnemyList()) {
-                        if (battle && allyToAttack != null) {
-                            allyToAttack.beDamaged(e.damage);
-                            System.out.println("Un nemico sta attaccando un alleato!");
-                        } else {
-                            e.move();
-                            int newColumn = (int) e.getLogicX();
-                            if (newColumn < 0 || newColumn >= COLUMNS) {
-                                // Gestione sconfitta o uscita dal tabellone
-                            }
-                        }
-                    }
-
-                    // Pulizia: se l'alleato è morto, lo rimuoviamo
-                    if (allyToAttack != null && allyToAttack.isDead()) {
-                        if (currentCell.hasAlly() && currentCell.getAlly() == allyToAttack) {
-                            currentCell.setAlly(null);
-                        } else if (j > 0 && maskMatrix[i][j - 1].getAlly() == allyToAttack) {
-                            maskMatrix[i][j - 1].setAlly(null);
-                        }
-                        System.out.println("Un alleato è stato sconfitto");
-                    }
-                }
-            }
-        }
-    }
-
-    // --- METODI DI UTILITÀ GENERICI ---
-
-    // Rende generico il controllo sulla presenza di nemici
     public boolean hasEnemyAt(int row, int col) {
         if (row < 0 || row >= ROWS || col < 0 || col >= COLUMNS) {
             return false;
         }
         return maskMatrix[row][col].hasEnemy();
+    }
+
+    public boolean cellaLibera(int riga, int colonna) {
+        if (riga < 0 || riga >= ROWS || colonna < 0 || colonna >= COLUMNS) {
+            return false;
+        }
+        return !maskMatrix[riga][colonna].hasAlly();
     }
 
     public int getRows() {
@@ -102,19 +55,74 @@ public class MapMask {
         return monete;
     }
 
+    public void setMonete(int monete) {
+        this.monete = monete;
+    }
+
     public void addMonete(int monete) {
         this.monete += monete;
     }
 
-    public boolean sottraiMonete(int costo) {
-        if (this.monete >= costo) {
-            this.monete -= costo;
+    public boolean sottraiMonete(int somma) {
+        if (this.monete >= somma) {
+            this.monete -= somma;
+            addMoneteSpese(somma);
             return true;
         }
         return false;
     }
 
-    public boolean cellaLibera(int riga, int colonna) {
-        return !maskMatrix[riga][colonna].hasAlly();
+    // --- STATISTICHE E METRICHE ---
+
+    public void incrementaNemiciUccisi() { this.nemiciUccisi++; }
+    public int getNemiciUccisi() { return nemiciUccisi; }
+
+    public void addMoneteSpese(int somma) { this.moneteSpeseTotali += somma; }
+    public int getMoneteSpeseTotali() { return moneteSpeseTotali; }
+
+    public void incrementaAlleatiPiazzati() { this.alleatiPiazzatiTotali++; }
+    public int getAlleatiPiazzatiTotali() { return alleatiPiazzatiTotali; }
+
+    // ==========================================
+    // 🗄️ SUPPORTO SALVATAGGIO / CARICAMENTO DATABASE
+    // ==========================================
+
+    public GameStateDTO creaDTO(int ondata) {
+        GameStateDTO dto = new GameStateDTO();
+        dto.monete = this.monete;
+        dto.ondataAttuale = ondata;
+        dto.nemiciUccisi = this.nemiciUccisi;
+        dto.alleatiPiazzati = this.alleatiPiazzatiTotali;
+        dto.moneteSpese = this.moneteSpeseTotali;
+
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLUMNS; c++) {
+                Ally alleato = maskMatrix[r][c].getAlly();
+                if (alleato != null) {
+                    GameStateDTO.CellDataDTO cellaDTO = new GameStateDTO.CellDataDTO();
+                    cellaDTO.riga = r;
+                    cellaDTO.colonna = c;
+                    cellaDTO.tipoAlleato = alleato.getClass().getSimpleName();
+                    cellaDTO.hpRimanenti = alleato.getHp();
+                    dto.griglia.add(cellaDTO);
+                }
+            }
+        }
+        return dto;
+    }
+
+    public void ripristinaDaDTO(GameStateDTO dto) {
+        this.monete = dto.monete;
+        this.nemiciUccisi = dto.nemiciUccisi;
+        this.alleatiPiazzatiTotali = dto.alleatiPiazzati;
+        this.moneteSpeseTotali = dto.moneteSpese;
+
+        // svuota la griglia da stati precedenti prima di ricaricare
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLUMNS; c++) {
+                maskMatrix[r][c].setAlly(null);
+                maskMatrix[r][c].getEnemyList().clear();
+            }
+        }
     }
 }

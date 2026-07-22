@@ -8,14 +8,14 @@ public class Soldato extends Ally {
     }
 
     @Override
-    public void doAction(MapMask map, int row, int col) {
-
+    public boolean doAction(MapMask map, int row, int col) {
         if (canAttack() && map.hasEnemyAt(row, col + 1)) {
-            // Usiamo getFirst() per consistenza e pulizia
             Enemy bersaglio = map.getMaskMatrix()[row][col + 1].getEnemyList().getFirst();
             bersaglio.beDamaged(this.damage);
             System.out.println("Il Soldato in [" + row + "][" + col + "] attacca il nemico davanti a sé!");
             resetCooldown();
+            return true; // 🎯 Attacco eseguito
         }
+        return false;
     }
 }

@@ -4,6 +4,7 @@ module it.unical.uid.progettoesameuid {
 
     requires com.almasb.fxgl.all;
     requires java.sql;
+    requires org.xerial.sqlitejdbc; // Se te lo richiede esplicitamente l'IDE
 
     requires javafx.media;
 
@@ -12,4 +13,6 @@ module it.unical.uid.progettoesameuid {
 
     exports it.unical.uid.progettoesameuid;
     opens it.unical.uid.progettoesameuid.model to javafx.fxml;
+
+
 }

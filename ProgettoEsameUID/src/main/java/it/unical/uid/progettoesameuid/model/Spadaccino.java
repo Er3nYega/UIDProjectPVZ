@@ -8,17 +8,17 @@ public class Spadaccino extends Ally {
     }
 
     @Override
-    public void doAction(MapMask map, int row, int col) {
-
+    public boolean doAction(MapMask map, int row, int col) {
         if (canAttack()) {
             for (int c = col + 1; c <= col + 2 && c < map.getColumns(); c++) {
                 if (map.hasEnemyAt(row, c)) {
                     Enemy bersaglio = map.getMaskMatrix()[row][c].getEnemyList().getFirst();
                     bersaglio.beDamaged(this.damage);
                     resetCooldown();
-                    break; // Colpisce un solo bersaglio per turno
+                    return true; // 🎯 Attacco eseguito
                 }
             }
         }
+        return false;
     }
 }

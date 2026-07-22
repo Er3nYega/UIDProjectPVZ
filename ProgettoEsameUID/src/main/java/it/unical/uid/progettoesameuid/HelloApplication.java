@@ -14,7 +14,9 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 
@@ -31,7 +33,13 @@ public class HelloApplication extends Application {
     public void start(Stage stage) {
         this.primaryStage = stage;
         primaryStage.setTitle("Resonance: Medieval Defense");
+        Font fontCaricato = Font.loadFont(getClass().getResourceAsStream("/fonts/NormalFont.ttf"), 20);
 
+        if (fontCaricato != null) {
+            System.out.println("✅ Font caricato con successo! Nome Reale: " + fontCaricato.getFamily());
+        } else {
+            System.err.println("❌ Impossibile caricare il font! Verifica che si trovi in src/main/resources/fonts/NormalFont.ttf");
+        }
         // Avviamo il menu iniziale
         showMenu();
     }
@@ -95,18 +103,19 @@ public class HelloApplication extends Application {
     }
 
     private Scene creaScenaAutoScalante(Parent fxmlContent) {
-        // 1. BLOCCHIAMO I CONFINI DELL'FXML (Niente spasmi se la freccia esce a destra!)
+        // 1. BLOCCHIAMO I CONFINI DELL'FXML ALLA RISOLUZIONE BASE
         Rectangle clip = new Rectangle(LARGHEZZA_BASE, ALTEZZA_BASE);
         fxmlContent.setClip(clip);
 
-        // 2. StackPane contenitore pulito
+        // 2. STACKPANE CONTENITORE NERO (Copre l'intero monitor evitando le strisce bianche)
         StackPane rootContainer = new StackPane();
         rootContainer.setStyle("-fx-background-color: black;");
         rootContainer.getChildren().add(fxmlContent);
 
-        Scene scene = new Scene(rootContainer, LARGHEZZA_BASE, ALTEZZA_BASE);
+        // 3. CREAZIONE SCENA CON RIEMPIMENTO NERO ASSOLUTO (Letterboxing NERO)
+        Scene scene = new Scene(rootContainer, LARGHEZZA_BASE, ALTEZZA_BASE, Color.BLACK);
 
-        // 3. Trasformazione di scala controllata
+        // 4. TRASFORMAZIONE DI SCALA CON PIVOT AL CENTRO
         Scale scale = new Scale();
         scale.setPivotX(LARGHEZZA_BASE / 2.0);
         scale.setPivotY(ALTEZZA_BASE / 2.0);
@@ -120,12 +129,11 @@ public class HelloApplication extends Application {
         fxmlContent.getTransforms().clear();
         fxmlContent.getTransforms().add(scale);
 
-
-        // 2. USIAMO addEventFilter PER INTERCETTARE F11 SENZA CANCELLARE IL MENU DI PAUSA
+        // 5. EVENT FILTER PER F11 SENZA INTERFERIRE CON ESC E IL MENU PAUSA
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.F11) {
                 primaryStage.setFullScreen(!primaryStage.isFullScreen());
-                event.consume(); // Blocca l'evento qui per F11
+                event.consume();
             }
         });
 
@@ -136,7 +144,7 @@ public class HelloApplication extends Application {
         primaryStage.setFullScreen(true);
         primaryStage.setFullScreenExitHint("");
 
-        // 1. Disabilita il tasto ESC nativo del sistema per il Fullscreen
+        // Disabilita il tasto ESC nativo del sistema per uscire dal Fullscreen
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 
         primaryStage.show();

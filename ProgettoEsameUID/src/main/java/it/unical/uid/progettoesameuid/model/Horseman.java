@@ -3,27 +3,36 @@ package it.unical.uid.progettoesameuid.model;
 public class Horseman extends Ally {
 
     public Horseman() {
-
-        super(10000, 1000, 200, 1, 100);
+        // hp: 10000, danno: 1000, costo: 200, range: 1, attackCooldown: 300ms tra un passo e l'altro
+        super(10000, 1000, 200, 1, 300L);
     }
 
     @Override
-    public void doAction(MapMask map, int row, int col) {
+    public boolean doAction(MapMask map, int row, int col) {
+        if (!canAttack()) return false;
 
-        // Infligge danni a chiunque sia nella sua cella attuale
-        for (Enemy e : map.getMaskMatrix()[row][col].getEnemyList()) {
-            e.beDamaged(this.damage);
+        boolean haColpito = false;
+
+        // 1. Infligge danno a TUTTI i nemici presenti nella cella attuale
+        var nemiciInCella = map.getMaskMatrix()[row][col].getEnemyList();
+        if (!nemiciInCella.isEmpty()) {
+            for (Enemy e : nemiciInCella) {
+                e.beDamaged(this.damage);
+                haColpito = true;
+            }
         }
 
-// Si sposta in avanti nella griglia
+        // 2. Avanza di una casella verso destra nel Model
         int prossimaColonna = col + 1;
-        map.getMaskMatrix()[row][col].setAlly(null); // Lascia la vecchia cella
+        map.getMaskMatrix()[row][col].setAlly(null);
 
         if (prossimaColonna < map.getColumns()) {
-            map.getMaskMatrix()[row][prossimaColonna].setAlly(this); // Entra nella nuova cella
+            map.getMaskMatrix()[row][prossimaColonna].setAlly(this);
         } else {
-            // È uscito dallo schermo, il suo compito è finito
-            System.out.println("L'Horseman ha completato la carica ed è uscito di scena!");
+            System.out.println("🐎 L'Horseman ha completato la carica ed è uscito di scena!");
         }
+
+        resetCooldown();
+        return true;
     }
 }
